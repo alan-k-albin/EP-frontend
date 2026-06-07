@@ -1,0 +1,13 @@
+import API from './axios.js'
+
+export const createPost = (data) => API.post('/posts', data)
+export const getFeedPosts = () => API.get('/posts/feed')
+export const getPost = (id) => API.get(`/posts/${id}`)
+export const updatePost = (id, data) => API.put(`/posts/${id}`, data)
+export const deletePost = (id) => API.delete(`/posts/${id}`)
+export const reactToPost = (id, type) => API.post(`/posts/${id}/react`, { type })
+export const getPostsByUser = (userId) => API.get(`/posts/user/${userId}`)
+export const addComment = (id, content) => API.post(`/posts/${id}/comments`, { content })
+export const getComments = (id) => API.get(`/posts/${id}/comments`)
+export const addReply = (commentId, content) => API.post(`/posts/comments/${commentId}/replies`, { content })
+export const getReplies = (commentId) => API.get(`/posts/comments/${commentId}/replies`)
