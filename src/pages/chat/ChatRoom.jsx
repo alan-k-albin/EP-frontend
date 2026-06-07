@@ -5,7 +5,7 @@ import { getChatMessages, sendMessage } from '../../api/chatAPI'
 import { useAuth } from '../../context/AuthContext'
 import io from 'socket.io-client'
 
-const socket = io('http://localhost:5000')
+const socket = io('https://ep-backend-1vay.onrender.com')
 
 function ChatRoom() {
   const { id } = useParams()
