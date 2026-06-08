@@ -96,7 +96,7 @@ function EditProfile() {
               <HiCamera size={16} className="text-white" />
             </div>
           </div>
-          <p className="text-sm text-[#2B4593] font-semibold mt-3">Change Photo</p>
+          import { uploadProfilePhoto } from '../../api/mediaAPI'
         </div>
 
         <div className="py-4 space-y-4 border-b border-gray-100">
