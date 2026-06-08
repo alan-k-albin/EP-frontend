@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { HiSearch } from 'react-icons/hi'
+import { Link } from 'react-router-dom'
 import BottomNav from '../../components/layout/BottomNav'
 import { search } from '../../api/searchAPI'
 
@@ -56,22 +57,31 @@ function Explore() {
         {loading && <p className="text-center text-gray-400 text-sm mt-10">Searching...</p>}
 
         {!loading && activeTab === 'people' && results.users.map((user) => (
-          <div key={user.id} className="flex items-center gap-3 py-3 border-b border-gray-100">
-            <div className="w-11 h-11 rounded-full bg-[#2B4593] flex items-center justify-center text-white font-bold">
-              {user.full_name?.charAt(0)}
+          <Link to={`/user/${user.id}`} key={user.id}>
+            <div className="flex items-center gap-3 py-3 border-b border-gray-100">
+              <div className="w-11 h-11 rounded-full bg-[#2B4593] flex items-center justify-center text-white font-bold">
+                {user.full_name?.charAt(0)}
+              </div>
+              <div>
+                <div className="flex items-center gap-1">
+                  <p className="text-sm font-semibold text-gray-800">{user.full_name}</p>
+                  {user.is_verified && <span className="text-xs bg-[#2B4593] text-white px-1.5 py-0.5 rounded-full">✓</span>}
+                </div>
+                <p className="text-xs text-gray-400">@{user.username}</p>
+                {user.college && <p className="text-xs text-gray-400">{user.college}</p>}
+              </div>
             </div>
-            <div>
-              <p className="text-sm font-semibold text-gray-800">{user.full_name}</p>
-              <p className="text-xs text-gray-400">@{user.username}</p>
-            </div>
-          </div>
+          </Link>
         ))}
 
         {!loading && activeTab === 'posts' && results.posts.map((post) => (
-          <div key={post.id} className="py-3 border-b border-gray-100">
-            <p className="text-sm font-semibold text-gray-800">{post.full_name}</p>
-            <p className="text-sm text-gray-600 mt-1">{post.content}</p>
-          </div>
+          <Link to={`/post/${post.id}`} key={post.id}>
+            <div className="py-3 border-b border-gray-100">
+              <p className="text-sm font-semibold text-gray-800">{post.full_name}</p>
+              <p className="text-sm text-gray-600 mt-1">{post.content}</p>
+              <p className="text-xs text-gray-400 mt-1">{new Date(post.created_at).toLocaleDateString()}</p>
+            </div>
+          </Link>
         ))}
 
         {!loading && activeTab === 'hashtags' && results.hashtags.map((tag) => (

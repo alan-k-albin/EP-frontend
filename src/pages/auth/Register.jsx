@@ -3,6 +3,13 @@ import { Link, useNavigate } from 'react-router-dom'
 import { registerUser } from '../../api/authAPI'
 import { useAuth } from '../../context/AuthContext'
 
+const userTypes = [
+  { value: 'student', label: '🎓 Student' },
+  { value: 'public', label: '👤 General Public' },
+  { value: 'professional', label: '💼 Professional' },
+  { value: 'company', label: '🏢 Company' },
+]
+
 function Register() {
   const [form, setForm] = useState({
     fullName: '',
@@ -10,11 +17,11 @@ function Register() {
     email: '',
     college: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    userType: '',
   })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-
   const { login } = useAuth()
   const navigate = useNavigate()
 
@@ -44,6 +51,7 @@ function Register() {
         email: form.email,
         college: form.college,
         password: form.password,
+        userType: form.userType,
       })
       login(res.data.token, res.data.user)
       navigate('/')
@@ -119,8 +127,28 @@ function Register() {
           placeholder="Confirm Password"
           value={form.confirmPassword}
           onChange={handleChange}
-          className="w-full border border-gray-300 rounded-xl px-4 py-3 mb-6 text-sm focus:outline-none focus:border-[#2B4593]"
+          className="w-full border border-gray-300 rounded-xl px-4 py-3 mb-4 text-sm focus:outline-none focus:border-[#2B4593]"
         />
+
+        {/* User Type — Optional */}
+        <div className="mb-6">
+          <p className="text-xs text-gray-400 mb-2">Tell us about yourself <span className="text-gray-300">(optional)</span></p>
+          <div className="grid grid-cols-2 gap-2">
+            {userTypes.map((type) => (
+              <button
+                key={type.value}
+                onClick={() => setForm({ ...form, userType: form.userType === type.value ? '' : type.value })}
+                className={`py-2 px-3 rounded-xl text-sm border transition-colors ${
+                  form.userType === type.value
+                    ? 'bg-[#2B4593] text-white border-[#2B4593]'
+                    : 'bg-white text-gray-600 border-gray-200'
+                }`}
+              >
+                {type.label}
+              </button>
+            ))}
+          </div>
+        </div>
 
         <button
           onClick={handleRegister}

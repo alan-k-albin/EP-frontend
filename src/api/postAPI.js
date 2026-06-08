@@ -11,3 +11,5 @@ export const addComment = (id, content) => API.post(`/posts/${id}/comments`, { c
 export const getComments = (id) => API.get(`/posts/${id}/comments`)
 export const addReply = (commentId, content) => API.post(`/posts/comments/${commentId}/replies`, { content })
 export const getReplies = (commentId) => API.get(`/posts/comments/${commentId}/replies`)
+export const attemptPost = (id) => API.post(`/posts/${id}/attempt`)
+export const getAttempted = (id) => API.get(`/posts/${id}/attempted`)
