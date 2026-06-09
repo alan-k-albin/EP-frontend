@@ -25,8 +25,8 @@ function Profile() {
 
   return (
     <div className="min-h-screen bg-white pb-20">
-      <div className="fixed top-0 left-0 right-0 bg-white border-b border-gray-200 px-4 py-4 z-50 flex items-center justify-between">
-        <h1 className="text-lg font-bold text-gray-800">My Profile</h1>
+      <div className="fixed top-0 left-0 right-0 bg-white border-b border-gray-100 px-4 py-4 z-50 flex items-center justify-between">
+        <h1 className="text-base font-semibold text-gray-800">My Profile</h1>
         <Link to="/settings">
           <HiPencil size={22} className="text-[#2B4593]" />
         </Link>
@@ -35,13 +35,17 @@ function Profile() {
       <div className="pt-16">
         <div className="px-4 py-6 border-b border-gray-100">
           <div className="flex items-center gap-4 mb-4">
-            <div className="w-20 h-20 rounded-full bg-[#2B4593] flex items-center justify-center text-white text-3xl font-bold">
-              {profile?.fullName?.charAt(0)}
-            </div>
+            {profile?.profilePhoto ? (
+              <img src={profile.profilePhoto} alt="avatar" className="w-20 h-20 rounded-full object-cover" />
+            ) : (
+              <div className="w-20 h-20 rounded-full bg-[#2B4593] flex items-center justify-center text-white text-3xl font-bold">
+                {profile?.fullName?.charAt(0)}
+              </div>
+            )}
             <div>
               <div className="flex items-center gap-2">
                 <h2 className="text-lg font-bold text-gray-800">{profile?.fullName}</h2>
-                {profile?.isVerified && <span className="text-xs bg-[#2B4593] text-white px-2 py-0.5 rounded-full">✓ Verified</span>}
+                {profile?.isVerified && <span className="text-xs bg-[#2B4593] text-white px-2 py-0.5 rounded-full">✓</span>}
               </div>
               <p className="text-sm text-gray-500">@{profile?.username}</p>
               {profile?.bio && <p className="text-sm text-gray-500 mt-1">{profile?.bio}</p>}
@@ -63,18 +67,22 @@ function Profile() {
           )}
 
           <div className="flex gap-6 mb-4">
-            <div className="text-center">
+            <Link to="/connections" className="text-center">
               <p className="font-bold text-gray-800">{profile?.connectionCount}</p>
               <p className="text-xs text-gray-400">Connections</p>
-            </div>
+            </Link>
             <div className="text-center">
               <p className="font-bold text-gray-800">{profile?.postCount}</p>
               <p className="text-xs text-gray-400">Posts</p>
             </div>
+            <Link to="/connections/requests" className="text-center">
+              <p className="font-bold text-[#2B4593]">Requests</p>
+              <p className="text-xs text-gray-400">Pending</p>
+            </Link>
           </div>
 
           <Link to="/settings/edit-profile">
-            <button className="w-full border border-[#2B4593] text-[#2B4593] rounded-xl py-2 text-sm font-semibold">
+            <button className="w-full border border-[#2B4593] text-[#2B4593] rounded-xl py-2 text-sm font-semibold hover:bg-[#2B4593] hover:text-white transition-colors">
               Edit Profile
             </button>
           </Link>
@@ -133,10 +141,19 @@ function Profile() {
             <p className="text-sm text-gray-400">No posts yet</p>
           ) : (
             posts.map((post) => (
-              <div key={post.id} className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm mb-3">
-                <p className="text-sm text-gray-700">{post.content}</p>
-                <p className="text-xs text-gray-400 mt-2">{new Date(post.created_at).toLocaleDateString()}</p>
-              </div>
+              <Link to={`/post/${post.id}`} key={post.id}>
+                <div className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm mb-3">
+                  <p className="text-sm text-gray-700">{post.content}</p>
+                  {post.media_url && (
+                    post.media_type === 'video' ? (
+                      <video src={post.media_url} className="w-full max-h-48 object-cover rounded-xl mt-2" />
+                    ) : (
+                      <img src={post.media_url} alt="media" className="w-full max-h-48 object-cover rounded-xl mt-2" />
+                    )
+                  )}
+                  <p className="text-xs text-gray-400 mt-2">{new Date(post.created_at).toLocaleDateString()}</p>
+                </div>
+              </Link>
             ))
           )}
         </div>

@@ -2,6 +2,7 @@ import { useState, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { HiArrowLeft, HiPhotograph, HiVideoCamera, HiPlus, HiTrash, HiX } from 'react-icons/hi'
 import { createPost } from '../../api/postAPI'
+import { createPoll } from '../../api/pollAPI'
 import { uploadMedia } from '../../api/mediaAPI'
 import { useAuth } from '../../context/AuthContext'
 
@@ -64,7 +65,13 @@ function CreatePost() {
     }
     setLoading(true)
     try {
-      await createPost({ content, mediaUrl, mediaType })
+      const postRes = await createPost({ content, mediaUrl, mediaType })
+      if (showPoll) {
+        const validOptions = pollOptions.filter((o) => o.trim() !== '')
+        if (validOptions.length >= 2) {
+          await createPoll({ postId: postRes.data.id, options: validOptions })
+        }
+      }
       navigate('/')
     } catch (err) {
       setError('Failed to create post. Please try again.')
@@ -75,7 +82,6 @@ function CreatePost() {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Top Bar */}
       <div className="fixed top-0 left-0 right-0 bg-white border-b border-gray-100 px-4 py-3 z-50 flex items-center justify-between">
         <Link to="/">
           <HiArrowLeft size={22} className="text-gray-500" />
@@ -84,14 +90,13 @@ function CreatePost() {
         <button
           onClick={handlePost}
           disabled={loading || uploading}
-          className="bg-[#2B4593] text-white text-sm font-semibold px-5 py-1.5 rounded-full disabled:opacity-50 hover:bg-[#8EB3E7] transition-colors"
+          className="bg-[#2B4593] text-white text-sm font-semibold px-5 py-1.5 rounded-full disabled:opacity-50"
         >
           {loading ? 'Posting...' : 'Post'}
         </button>
       </div>
 
       <div className="pt-16 px-4">
-        {/* User Info */}
         <div className="flex items-center gap-3 py-4">
           <div className="w-11 h-11 rounded-full bg-[#2B4593] flex items-center justify-center text-white font-bold text-lg">
             {user?.fullName?.charAt(0)}
@@ -102,14 +107,12 @@ function CreatePost() {
           </div>
         </div>
 
-        {/* Error */}
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-500 text-sm px-4 py-3 rounded-xl mb-4">
             {error}
           </div>
         )}
 
-        {/* Text Input */}
         <textarea
           placeholder="What do you want to share?"
           value={content}
@@ -118,7 +121,6 @@ function CreatePost() {
           className="w-full text-sm text-gray-800 focus:outline-none resize-none placeholder-gray-300 leading-relaxed"
         />
 
-        {/* Media Preview */}
         {uploading && (
           <div className="flex items-center gap-2 text-sm text-gray-400 mt-3">
             <div className="w-4 h-4 border-2 border-[#2B4593] border-t-transparent rounded-full animate-spin"></div>
@@ -133,16 +135,12 @@ function CreatePost() {
             ) : (
               <video src={mediaPreview} controls className="w-full max-h-80 rounded-2xl" />
             )}
-            <button
-              onClick={removeMedia}
-              className="absolute top-2 right-2 bg-black bg-opacity-50 rounded-full p-1"
-            >
+            <button onClick={removeMedia} className="absolute top-2 right-2 bg-black bg-opacity-50 rounded-full p-1">
               <HiX size={16} className="text-white" />
             </button>
           </div>
         )}
 
-        {/* Poll Section */}
         {showPoll && (
           <div className="mt-4 border border-gray-100 rounded-2xl p-4 bg-gray-50">
             <p className="text-sm font-semibold text-gray-700 mb-3">Poll Options</p>
@@ -171,41 +169,21 @@ function CreatePost() {
         )}
       </div>
 
-      {/* Hidden file inputs */}
-      <input
-        type="file"
-        accept="image/*"
-        ref={imageRef}
-        className="hidden"
-        onChange={(e) => handleMediaUpload(e.target.files[0], 'image')}
-      />
-      <input
-        type="file"
-        accept="video/*"
-        ref={videoRef}
-        className="hidden"
-        onChange={(e) => handleMediaUpload(e.target.files[0], 'video')}
-      />
+      <input type="file" accept="image/*" ref={imageRef} className="hidden" onChange={(e) => handleMediaUpload(e.target.files[0], 'image')} />
+      <input type="file" accept="video/*" ref={videoRef} className="hidden" onChange={(e) => handleMediaUpload(e.target.files[0], 'video')} />
 
-      {/* Bottom Toolbar */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-4 py-3 flex items-center gap-6">
-        <button
-          onClick={() => imageRef.current.click()}
-          className="flex items-center gap-2 text-[#2B4593] hover:text-[#8EB3E7] transition-colors"
-        >
+        <button onClick={() => imageRef.current.click()} className="flex items-center gap-2 text-[#2B4593]">
           <HiPhotograph size={22} />
           <span className="text-sm">Photo</span>
         </button>
-        <button
-          onClick={() => videoRef.current.click()}
-          className="flex items-center gap-2 text-[#2B4593] hover:text-[#8EB3E7] transition-colors"
-        >
+        <button onClick={() => videoRef.current.click()} className="flex items-center gap-2 text-[#2B4593]">
           <HiVideoCamera size={22} />
           <span className="text-sm">Video</span>
         </button>
         <button
           onClick={() => setShowPoll(!showPoll)}
-          className={`flex items-center gap-2 transition-colors ${showPoll ? 'text-red-400' : 'text-[#2B4593] hover:text-[#8EB3E7]'}`}
+          className={`flex items-center gap-2 ${showPoll ? 'text-red-400' : 'text-[#2B4593]'}`}
         >
           <HiPlus size={22} />
           <span className="text-sm">{showPoll ? 'Remove Poll' : 'Add Poll'}</span>
