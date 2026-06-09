@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Link, useParams } from 'react-router-'
+import { Link, useParams } from 'react-router-dom'
 import { HiArrowLeft, HiLocationMarker, HiAcademicCap } from 'react-icons/hi'
 import BottomNav from '../../components/layout/BottomNav'
 import { getUserProfile } from '../../api/userAPI'
