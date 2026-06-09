@@ -12,8 +12,8 @@ export const NotificationProvider = ({ children }) => {
     if (!user) return
     const fetchCount = () => {
       getUnreadCount()
-        .then((res) => setUnreadCount(parseInt(res.data.count)))
-        .catch((err) => console.error(err))
+        .then((res) => setUnreadCount(parseInt(res.data.count) || 0))
+        .catch(() => setUnreadCount(0))
     }
     fetchCount()
     const interval = setInterval(fetchCount, 30000)
