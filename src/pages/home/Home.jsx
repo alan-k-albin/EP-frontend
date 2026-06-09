@@ -4,6 +4,7 @@ import { HiSearch, HiPencilAlt, HiDotsVertical } from 'react-icons/hi'
 import BottomNav from '../../components/layout/BottomNav'
 import ThemeToggle from '../../components/layout/ThemeToggle'
 import ReportModal from '../../components/common/ReportModal'
+import PollCard from '../../components/feed/PollCard'
 import { getFeedPosts, reactToPost, attemptPost } from '../../api/postAPI'
 import { useAuth } from '../../context/AuthContext'
 import { useTheme } from '../../context/ThemeContext'
@@ -119,8 +120,10 @@ function Home() {
 
               <p className={`text-sm mb-3 leading-relaxed ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>{post.content}</p>
 
+              <PollCard postId={post.id} />
+
               {post.media_url && (
-                <div className="mb-3 rounded-2xl overflow-hidden">
+                <div className="mb-3 rounded-2xl overflow-hidden mt-3">
                   {post.media_type === 'video' ? (
                     <video src={post.media_url} controls className="w-full max-h-80 object-cover" />
                   ) : (
@@ -151,7 +154,6 @@ function Home() {
         )}
       </div>
 
-      {/* Share Modal */}
       {sharePost && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-end justify-center">
           <div className="bg-white rounded-t-2xl w-full max-w-sm p-6">
@@ -169,12 +171,8 @@ function Home() {
         </div>
       )}
 
-      {/* Report Modal */}
       {reportPost && (
-        <ReportModal
-          postId={reportPost}
-          onClose={() => setReportPost(null)}
-        />
+        <ReportModal postId={reportPost} onClose={() => setReportPost(null)} />
       )}
 
       <BottomNav />

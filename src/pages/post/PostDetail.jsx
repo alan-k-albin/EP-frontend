@@ -3,6 +3,7 @@ import { Link, useParams, useNavigate } from 'react-router-dom'
 import { HiArrowLeft, HiPaperAirplane, HiDotsVertical } from 'react-icons/hi'
 import { getPost, getComments, addComment, addReply, deletePost, attemptPost, getAttempted } from '../../api/postAPI'
 import { useAuth } from '../../context/AuthContext'
+import PollCard from '../../components/feed/PollCard'
 
 function PostDetail() {
   const { id } = useParams()
@@ -95,16 +96,17 @@ function PostDetail() {
 
   return (
     <div className="min-h-screen bg-white pb-20">
-      <div className="fixed top-0 left-0 right-0 bg-white border-b border-gray-200 px-4 py-4 z-50 flex items-center justify-between">
+      <div className="fixed top-0 left-0 right-0 bg-white border-b border-gray-100 px-4 py-4 z-50 flex items-center justify-between">
         <Link to="/">
-          <HiArrowLeft size={22} className="text-[#2B4593]" />
+          <HiArrowLeft size={22} className="text-gray-500" />
         </Link>
-        <h1 className="text-lg font-bold text-gray-800">Post</h1>
+        <h1 className="text-base font-semibold text-gray-800">Post</h1>
         {post?.user_id === user?.id && (
           <button onClick={() => setShowMenu(!showMenu)}>
             <HiDotsVertical size={22} className="text-gray-400" />
           </button>
         )}
+        {post?.user_id !== user?.id && <div className="w-6" />}
       </div>
 
       {showMenu && (
@@ -114,10 +116,7 @@ function PostDetail() {
               Edit Post
             </div>
           </Link>
-          <button
-            onClick={handleDelete}
-            className="w-full px-6 py-3 text-sm text-red-500 text-left hover:bg-gray-50"
-          >
+          <button onClick={handleDelete} className="w-full px-6 py-3 text-sm text-red-500 text-left hover:bg-gray-50">
             Delete Post
           </button>
         </div>
@@ -128,22 +127,43 @@ function PostDetail() {
           <div className="py-4 border-b border-gray-100">
             <div className="flex items-center gap-3 mb-3">
               <Link to={`/user/${post.user_id}`}>
-                <div className="w-11 h-11 rounded-full bg-[#2B4593] flex items-center justify-center text-white font-bold">
-                  {post.full_name?.charAt(0)}
-                </div>
+                {post.profile_photo ? (
+                  <img src={post.profile_photo} alt="avatar" className="w-11 h-11 rounded-full object-cover" />
+                ) : (
+                  <div className="w-11 h-11 rounded-full bg-[#2B4593] flex items-center justify-center text-white font-bold">
+                    {post.full_name?.charAt(0)}
+                  </div>
+                )}
               </Link>
               <div>
-                <p className="font-semibold text-sm text-gray-800">{post.full_name}</p>
+                <div className="flex items-center gap-1">
+                  <p className="font-semibold text-sm text-gray-800">{post.full_name}</p>
+                  {post.is_verified && <span className="text-xs bg-[#2B4593] text-white px-1.5 py-0.5 rounded-full">✓</span>}
+                </div>
                 <p className="text-xs text-gray-400">@{post.username}</p>
               </div>
             </div>
-            <p className="text-sm text-gray-700 mb-4">{post.content}</p>
-            <div className="flex gap-4 text-gray-400 text-sm border-t pt-3">
+
+            <p className="text-sm text-gray-700 mb-3 leading-relaxed">{post.content}</p>
+
+            <PollCard postId={post.id} />
+
+            {post.media_url && (
+              <div className="mt-3 rounded-2xl overflow-hidden">
+                {post.media_type === 'video' ? (
+                  <video src={post.media_url} controls className="w-full max-h-80 object-cover" />
+                ) : (
+                  <img src={post.media_url} alt="media" className="w-full max-h-80 object-cover" />
+                )}
+              </div>
+            )}
+
+            <div className="flex gap-4 text-gray-400 text-sm border-t mt-3 pt-3">
               <button className="hover:text-[#2B4593]">👍 Like</button>
               <button onClick={handleAttempt} className="hover:text-[#2B4593]">🙋 Attempted</button>
               {post.user_id === user?.id && (
                 <button onClick={handleViewAttempted} className="hover:text-[#2B4593] text-xs">
-                  👥 See who attempted
+                  👥 Who attempted
                 </button>
               )}
               <button onClick={handleCopyLink} className="hover:text-[#2B4593]">🔗 Copy</button>
@@ -205,7 +225,6 @@ function PostDetail() {
         </div>
       </div>
 
-      {/* Attempted List Modal */}
       {showAttempted && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-end justify-center">
           <div className="bg-white rounded-t-2xl w-full max-w-sm p-6 max-h-96 overflow-y-auto">
@@ -227,17 +246,14 @@ function PostDetail() {
                 </Link>
               ))
             )}
-            <button
-              onClick={() => setShowAttempted(false)}
-              className="w-full text-center py-3 text-sm text-red-400 font-semibold mt-2"
-            >
+            <button onClick={() => setShowAttempted(false)} className="w-full text-center py-3 text-sm text-red-400 font-semibold mt-2">
               Close
             </button>
           </div>
         </div>
       )}
 
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-3 flex items-center gap-3">
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-4 py-3 flex items-center gap-3">
         <div className="w-8 h-8 rounded-full bg-[#2B4593] flex items-center justify-center text-white font-bold text-sm">
           {user?.fullName?.charAt(0)}
         </div>
