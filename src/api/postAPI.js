@@ -13,3 +13,7 @@ export const addReply = (commentId, content) => API.post(`/posts/comments/${comm
 export const getReplies = (commentId) => API.get(`/posts/comments/${commentId}/replies`)
 export const attemptPost = (id) => API.post(`/posts/${id}/attempt`)
 export const getAttempted = (id) => API.get(`/posts/${id}/attempted`)
+export const bookmarkPost = (id) => API.post(`/posts/${id}/bookmark`)
+export const getBookmarks = () => API.get('/posts/bookmarks')
+export const repostPost = (id) => API.post(`/posts/${id}/repost`)
+export const getPostsByHashtag = (tag) => API.get(`/posts/hashtag/${tag}`)

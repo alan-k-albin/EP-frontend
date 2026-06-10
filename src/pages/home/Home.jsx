@@ -1,13 +1,27 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { HiSearch, HiPencilAlt, HiDotsVertical } from 'react-icons/hi'
+import { HiSearch, HiPencilAlt, HiDotsVertical, HiBookmark } from 'react-icons/hi'
 import BottomNav from '../../components/layout/BottomNav'
 import ThemeToggle from '../../components/layout/ThemeToggle'
 import ReportModal from '../../components/common/ReportModal'
 import PollCard from '../../components/feed/PollCard'
-import { getFeedPosts, reactToPost, attemptPost } from '../../api/postAPI'
+import { getFeedPosts, reactToPost, attemptPost, bookmarkPost, repostPost } from '../../api/postAPI'
 import { useAuth } from '../../context/AuthContext'
 import { useTheme } from '../../context/ThemeContext'
+
+const renderContent = (content) => {
+  if (!content) return null
+  const parts = content.split(/(#\w+)/g)
+  return parts.map((part, i) =>
+    part.startsWith('#') ? (
+      <Link key={i} to={`/hashtag/${part.slice(1)}`} className="text-[#2B4593] font-semibold hover:underline">
+        {part}
+      </Link>
+    ) : (
+      <span key={i}>{part}</span>
+    )
+  )
+}
 
 function Home() {
   const [posts, setPosts] = useState([])
@@ -30,7 +44,7 @@ function Home() {
       await reactToPost(postId, type)
       setPosts(posts.map((p) =>
         p.id === postId
-          ? { ...p, reaction_count: String(parseInt(p.reaction_count) + 1) }
+          ? { ...p, reaction_count: String(parseInt(p.reaction_count) + 1), liked: true }
           : p
       ))
     } catch (err) {
@@ -44,6 +58,27 @@ function Home() {
       setPosts(posts.map((p) =>
         p.id === postId ? { ...p, attempted: !p.attempted } : p
       ))
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  const handleBookmark = async (postId) => {
+    try {
+      await bookmarkPost(postId)
+      setPosts(posts.map((p) =>
+        p.id === postId ? { ...p, bookmarked: !p.bookmarked } : p
+      ))
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  const handleRepost = async (postId) => {
+    try {
+      await repostPost(postId)
+      setSharePost(null)
+      alert('Reposted successfully!')
     } catch (err) {
       console.error(err)
     }
@@ -79,7 +114,10 @@ function Home() {
         {loading ? (
           <p className="text-center text-gray-400 text-sm mt-10">Loading posts...</p>
         ) : posts.length === 0 ? (
-          <p className="text-center text-gray-400 text-sm mt-10">No posts yet. Connect with people to see their posts!</p>
+          <div className="text-center mt-20">
+            <p className="text-gray-400 text-sm mb-4">No posts yet!</p>
+            <p className="text-gray-400 text-xs">Connect with people or create your first post</p>
+          </div>
         ) : (
           posts.map((post) => (
             <div key={post.id} className={`border rounded-2xl p-4 mt-4 shadow-sm ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'}`}>
@@ -96,15 +134,22 @@ function Home() {
                   </Link>
                   <div>
                     <div className="flex items-center gap-1">
-                      <p className={`font-semibold text-sm ${darkMode ? 'text-white' : 'text-gray-800'}`}>{post.full_name}</p>
+                      <Link to={`/user/${post.user_id}`}>
+                        <p className={`font-semibold text-sm ${darkMode ? 'text-white' : 'text-gray-800'}`}>{post.full_name}</p>
+                      </Link>
                       {post.is_verified && <span className="text-xs bg-[#2B4593] text-white px-1.5 py-0.5 rounded-full">✓</span>}
                     </div>
                     <p className="text-xs text-gray-400">@{post.username}</p>
                   </div>
                 </div>
-                <button onClick={() => setPostMenu(postMenu === post.id ? null : post.id)}>
-                  <HiDotsVertical size={18} className="text-gray-400" />
-                </button>
+                <div className="flex items-center gap-2">
+                  <button onClick={() => handleBookmark(post.id)}>
+                    <HiBookmark size={18} className={post.bookmarked ? 'text-[#2B4593]' : 'text-gray-300'} />
+                  </button>
+                  <button onClick={() => setPostMenu(postMenu === post.id ? null : post.id)}>
+                    <HiDotsVertical size={18} className="text-gray-400" />
+                  </button>
+                </div>
               </div>
 
               {postMenu === post.id && (
@@ -118,7 +163,9 @@ function Home() {
                 </div>
               )}
 
-              <p className={`text-sm mb-3 leading-relaxed ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>{post.content}</p>
+              <p className={`text-sm mb-3 leading-relaxed ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                {renderContent(post.content)}
+              </p>
 
               <PollCard postId={post.id} />
 
@@ -133,12 +180,15 @@ function Home() {
               )}
 
               <div className={`flex gap-4 text-sm border-t pt-3 ${darkMode ? 'text-gray-400 border-gray-700' : 'text-gray-400'}`}>
-                <button onClick={() => handleReact(post.id, 'like')} className="hover:text-[#2B4593]">
+                <button
+                  onClick={() => handleReact(post.id, 'like')}
+                  className={`hover:text-[#2B4593] ${post.liked ? 'text-[#2B4593]' : ''}`}
+                >
                   👍 {post.reaction_count}
                 </button>
                 <button
                   onClick={() => handleAttempt(post.id)}
-                  className={`${post.attempted ? 'text-[#2B4593]' : ''} hover:text-[#2B4593]`}
+                  className={`hover:text-[#2B4593] ${post.attempted ? 'text-[#2B4593]' : ''}`}
                 >
                   🙋 {post.attempted_count || 0}
                 </button>
@@ -158,13 +208,28 @@ function Home() {
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-end justify-center">
           <div className="bg-white rounded-t-2xl w-full max-w-sm p-6">
             <h3 className="font-bold text-gray-800 mb-4">Share Post</h3>
-            <button onClick={() => handleCopyLink(sharePost.id)} className="w-full text-left py-3 border-b border-gray-100 text-sm text-gray-700 hover:text-[#2B4593]">
+            <button
+              onClick={() => handleRepost(sharePost.id)}
+              className="w-full text-left py-3 border-b border-gray-100 text-sm text-gray-700 hover:text-[#2B4593]"
+            >
+              🔁 Repost on EP
+            </button>
+            <button
+              onClick={() => handleCopyLink(sharePost.id)}
+              className="w-full text-left py-3 border-b border-gray-100 text-sm text-gray-700 hover:text-[#2B4593]"
+            >
               🔗 Copy Link
             </button>
-            <button onClick={() => handleShareWhatsApp(sharePost)} className="w-full text-left py-3 border-b border-gray-100 text-sm text-gray-700 hover:text-[#2B4593]">
+            <button
+              onClick={() => handleShareWhatsApp(sharePost)}
+              className="w-full text-left py-3 border-b border-gray-100 text-sm text-gray-700 hover:text-[#2B4593]"
+            >
               💬 Share via WhatsApp
             </button>
-            <button onClick={() => setSharePost(null)} className="w-full text-center py-3 text-sm text-red-400 font-semibold mt-2">
+            <button
+              onClick={() => setSharePost(null)}
+              className="w-full text-center py-3 text-sm text-red-400 font-semibold mt-2"
+            >
               Cancel
             </button>
           </div>

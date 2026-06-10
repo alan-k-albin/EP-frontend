@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { loginUser } from '../../api/authAPI'
 import { useAuth } from '../../context/AuthContext'
+import { Link, useNavigate } from 'react-router-dom'
 
 const validateEmail = (email) => {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
@@ -93,9 +94,9 @@ function Login() {
           <Link to="/register" className="text-[#2B4593] font-semibold">Sign up</Link>
         </p>
 
-        <p className="text-center text-sm text-[#2B4593] mt-3 cursor-pointer">
+        <Link to="/forgot-password" className="block text-center text-sm text-[#2B4593] mt-3">
           Forgot password?
-        </p>
+        </Link>
       </div>
     </div>
   )

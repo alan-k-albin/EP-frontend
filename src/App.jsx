@@ -1,8 +1,10 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import Login from './pages/auth/Login'
 import Register from './pages/auth/Register'
+import ForgotPassword from './pages/auth/ForgotPassword'
 import Home from './pages/home/Home'
 import Explore from './pages/explore/Explore'
+import HashtagPosts from './pages/explore/HashtagPosts'
 import Notifications from './pages/notifications/Notifications'
 import Profile from './pages/account/Profile'
 import UserProfile from './pages/account/UserProfile'
@@ -17,6 +19,7 @@ import EditProfile from './pages/account/EditProfile'
 import PrivacySettings from './pages/account/PrivacySettings'
 import AccountSettings from './pages/account/AccountSettings'
 import BlockedUsers from './pages/account/BlockedUsers'
+import Bookmarks from './pages/account/Bookmarks'
 import Connections from './pages/account/Connections'
 import ConnectionRequests from './pages/account/ConnectionRequests'
 import Verification from './pages/account/Verification'
@@ -31,6 +34,7 @@ function App() {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
 
         <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
         <Route path="/chat" element={<ProtectedRoute><ChatList /></ProtectedRoute>} />
@@ -40,6 +44,8 @@ function App() {
         <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
         <Route path="/user/:id" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
         <Route path="/explore" element={<ProtectedRoute><Explore /></ProtectedRoute>} />
+        <Route path="/hashtag/:tag" element={<ProtectedRoute><HashtagPosts /></ProtectedRoute>} />
+        <Route path="/bookmarks" element={<ProtectedRoute><Bookmarks /></ProtectedRoute>} />
         <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
         <Route path="/settings/edit-profile" element={<ProtectedRoute><EditProfile /></ProtectedRoute>} />
         <Route path="/settings/account" element={<ProtectedRoute><AccountSettings /></ProtectedRoute>} />
