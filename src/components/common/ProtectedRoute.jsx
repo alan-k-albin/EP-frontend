@@ -8,6 +8,10 @@ function ProtectedRoute({ children }) {
     return <Navigate to="/login" />
   }
 
+  if (user.onboardingCompleted === false) {
+    return <Navigate to="/onboarding" />
+  }
+
   return children
 }
 

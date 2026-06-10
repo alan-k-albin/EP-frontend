@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import Login from './pages/auth/Login'
 import Register from './pages/auth/Register'
 import ForgotPassword from './pages/auth/ForgotPassword'
+import Onboarding from './pages/auth/Onboarding'
 import Home from './pages/home/Home'
 import Explore from './pages/explore/Explore'
 import HashtagPosts from './pages/explore/HashtagPosts'
@@ -35,6 +36,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/onboarding" element={<Onboarding />} />
 
         <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
         <Route path="/chat" element={<ProtectedRoute><ChatList /></ProtectedRoute>} />
