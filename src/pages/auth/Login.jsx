@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { loginUser } from '../../api/authAPI'
 import { useAuth } from '../../context/AuthContext'
-import { Link, useNavigate } from 'react-router-dom'
 
 const validateEmail = (email) => {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
