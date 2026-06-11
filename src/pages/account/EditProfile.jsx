@@ -10,6 +10,30 @@ import {
 import { uploadProfilePhoto } from '../../api/mediaAPI'
 import { useAuth } from '../../context/AuthContext'
 
+// Normalize profile data to handle both snake_case and camelCase from backend
+function normalizeProfile(p) {
+  if (!p) return p
+  return {
+    ...p,
+    fullName: p.fullName || p.full_name || '',
+    profilePhoto: p.profilePhoto || p.profile_photo || '',
+    userType: p.userType || p.user_type || '',
+    isVerified: p.isVerified ?? p.is_verified ?? false,
+    currentCompany: p.currentCompany || p.current_company || '',
+    companySize: p.companySize || p.company_size || '',
+    foundedYear: p.foundedYear || p.founded_year || '',
+    bio: p.bio || '',
+    location: p.location || '',
+    website: p.website || '',
+    occupation: p.occupation || '',
+    industry: p.industry || '',
+    specialities: p.specialities || '',
+    experience: p.experience || [],
+    education: p.education || [],
+    skills: p.skills || [],
+  }
+}
+
 function EditProfile() {
   const { user, updateUser } = useAuth()
   const [profile, setProfile] = useState(null)
@@ -50,7 +74,7 @@ function EditProfile() {
   useEffect(() => {
     getMyProfile()
       .then((res) => {
-        const p = res.data
+        const p = normalizeProfile(res.data)
         setProfile(p)
         setForm({
           fullName: p.fullName || '',
@@ -94,8 +118,9 @@ function EditProfile() {
     setPhotoUploading(true)
     try {
       const res = await uploadProfilePhoto(file)
-      setProfile({ ...profile, profilePhoto: res.data.url })
-      updateUser({ profilePhoto: res.data.url })
+      const photoUrl = res.data.url || res.data.profilePhoto || res.data.profile_photo
+      setProfile({ ...profile, profilePhoto: photoUrl })
+      updateUser({ profilePhoto: photoUrl })
     } catch (err) {
       console.error(err)
     } finally {
@@ -108,8 +133,8 @@ function EditProfile() {
     setExpForm({
       title: exp.title || '',
       company: exp.company || '',
-      startDate: exp.start_date || '',
-      endDate: exp.end_date || '',
+      startDate: exp.start_date || exp.startDate || '',
+      endDate: exp.end_date || exp.endDate || '',
       current: exp.current || false,
     })
     setShowExpForm(true)
@@ -120,10 +145,8 @@ function EditProfile() {
     try {
       if (editingExpId) {
         const res = await updateExperience(editingExpId, expForm)
-        setProfile({
-          ...profile,
-          experience: profile.experience.map((e) => e.id === editingExpId ? res.data : e)
-        })
+        const updated = normalizeProfile({ ...profile, experience: profile.experience.map((e) => e.id === editingExpId ? res.data : e) })
+        setProfile(updated)
       } else {
         const res = await addExperience(expForm)
         setProfile({ ...profile, experience: [res.data, ...profile.experience] })
@@ -151,8 +174,8 @@ function EditProfile() {
       institution: edu.institution || '',
       degree: edu.degree || '',
       field: edu.field || '',
-      startYear: edu.start_year || '',
-      endYear: edu.end_year || '',
+      startYear: edu.start_year || edu.startYear || '',
+      endYear: edu.end_year || edu.endYear || '',
     })
     setShowEduForm(true)
   }
@@ -208,7 +231,7 @@ function EditProfile() {
     }
   }
 
-  const userType = profile?.userType || user?.userType
+  const userType = profile?.userType || user?.userType || user?.user_type
   const isStudentOrProfessional = userType === 'student' || userType === 'professional'
   const isCompany = userType === 'company'
   const isPublic = userType === 'public'
@@ -449,7 +472,7 @@ function EditProfile() {
                   <p className="text-sm font-semibold text-gray-800">{exp.title}</p>
                   <p className="text-xs text-gray-600 mt-0.5">{exp.company}</p>
                   <p className="text-xs text-gray-400 mt-0.5">
-                    {exp.start_date} — {exp.current ? 'Present' : exp.end_date}
+                    {exp.start_date || exp.startDate} — {exp.current ? 'Present' : (exp.end_date || exp.endDate)}
                   </p>
                 </div>
                 <div className="flex gap-2 flex-shrink-0">
@@ -539,8 +562,16 @@ function EditProfile() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-gray-800">{edu.institution}</p>
-                  {edu.degree && <p className="text-xs text-gray-600 mt-0.5">{edu.degree} {edu.field ? `· ${edu.field}` : ''}</p>}
-                  {edu.start_year && <p className="text-xs text-gray-400 mt-0.5">{edu.start_year} — {edu.end_year || 'Present'}</p>}
+                  {edu.degree && (
+                    <p className="text-xs text-gray-600 mt-0.5">
+                      {edu.degree} {edu.field ? `· ${edu.field}` : ''}
+                    </p>
+                  )}
+                  {(edu.start_year || edu.startYear) && (
+                    <p className="text-xs text-gray-400 mt-0.5">
+                      {edu.start_year || edu.startYear} — {edu.end_year || edu.endYear || 'Present'}
+                    </p>
+                  )}
                 </div>
                 <div className="flex gap-2 flex-shrink-0">
                   <button onClick={() => openEditEdu(edu)} className="p-1.5 rounded-lg hover:bg-gray-100">

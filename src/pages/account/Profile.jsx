@@ -1,9 +1,37 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { HiPencil, HiLocationMarker, HiAcademicCap, HiGlobe, HiBriefcase } from 'react-icons/hi'
+import { HiCog, HiLocationMarker, HiAcademicCap, HiGlobe, HiBriefcase } from 'react-icons/hi'
 import BottomNav from '../../components/layout/BottomNav'
 import { getMyProfile } from '../../api/userAPI'
 import { getPostsByUser } from '../../api/postAPI'
+
+// Normalize profile data to handle both snake_case and camelCase from backend
+function normalizeProfile(p) {
+  if (!p) return p
+  return {
+    ...p,
+    fullName: p.fullName || p.full_name || '',
+    profilePhoto: p.profilePhoto || p.profile_photo || '',
+    userType: p.userType || p.user_type || '',
+    isVerified: p.isVerified ?? p.is_verified ?? false,
+    currentCompany: p.currentCompany || p.current_company || '',
+    companySize: p.companySize || p.company_size || '',
+    foundedYear: p.foundedYear || p.founded_year || '',
+    connectionCount: p.connectionCount ?? p.connection_count ?? 0,
+    postCount: p.postCount ?? p.post_count ?? 0,
+    bio: p.bio || '',
+    location: p.location || '',
+    website: p.website || '',
+    occupation: p.occupation || '',
+    industry: p.industry || '',
+    specialities: p.specialities || '',
+    college: p.college || '',
+    username: p.username || '',
+    experience: p.experience || [],
+    education: p.education || [],
+    skills: p.skills || [],
+  }
+}
 
 function Profile() {
   const [profile, setProfile] = useState(null)
@@ -13,8 +41,9 @@ function Profile() {
   useEffect(() => {
     getMyProfile()
       .then((res) => {
-        setProfile(res.data)
-        return getPostsByUser(res.data.id)
+        const normalized = normalizeProfile(res.data)
+        setProfile(normalized)
+        return getPostsByUser(normalized.id)
       })
       .then((res) => setPosts(res.data))
       .catch((err) => console.error(err))
@@ -34,8 +63,8 @@ function Profile() {
     <div className="min-h-screen bg-white pb-20">
       <div className="fixed top-0 left-0 right-0 bg-white border-b border-gray-100 px-4 py-4 z-50 flex items-center justify-between">
         <h1 className="text-base font-semibold text-gray-800">My Profile</h1>
-        <Link to="/settings/edit-profile">
-          <HiPencil size={20} className="text-[#2B4593]" />
+        <Link to="/settings">
+          <HiCog size={22} className="text-[#2B4593]" />
         </Link>
       </div>
 
@@ -47,7 +76,7 @@ function Profile() {
               <img src={profile.profilePhoto} alt="avatar" className="w-20 h-20 rounded-full object-cover flex-shrink-0" />
             ) : (
               <div className="w-20 h-20 rounded-full bg-[#2B4593] flex items-center justify-center text-white text-3xl font-bold flex-shrink-0">
-                {profile?.fullName?.charAt(0)}
+                {profile?.fullName?.charAt(0) || '?'}
               </div>
             )}
             <div className="flex-1 min-w-0">
@@ -143,7 +172,9 @@ function Profile() {
                 <div>
                   <p className="text-sm font-semibold text-gray-800">{exp.title}</p>
                   <p className="text-xs text-gray-600">{exp.company}</p>
-                  <p className="text-xs text-gray-400">{exp.start_date} — {exp.current ? 'Present' : exp.end_date}</p>
+                  <p className="text-xs text-gray-400">
+                    {exp.start_date || exp.startDate} — {exp.current ? 'Present' : (exp.end_date || exp.endDate)}
+                  </p>
                 </div>
               </div>
             ))}
@@ -161,8 +192,16 @@ function Profile() {
                 </div>
                 <div>
                   <p className="text-sm font-semibold text-gray-800">{edu.institution}</p>
-                  {edu.degree && <p className="text-xs text-gray-600">{edu.degree}{edu.field ? ` · ${edu.field}` : ''}</p>}
-                  {edu.start_year && <p className="text-xs text-gray-400">{edu.start_year} — {edu.end_year || 'Present'}</p>}
+                  {(edu.degree) && (
+                    <p className="text-xs text-gray-600">
+                      {edu.degree}{(edu.field) ? ` · ${edu.field}` : ''}
+                    </p>
+                  )}
+                  {(edu.start_year || edu.startYear) && (
+                    <p className="text-xs text-gray-400">
+                      {edu.start_year || edu.startYear} — {edu.end_year || edu.endYear || 'Present'}
+                    </p>
+                  )}
                 </div>
               </div>
             ))}
