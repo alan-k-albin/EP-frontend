@@ -1,5 +1,5 @@
 import { createContext, useState, useEffect, useContext } from 'react'
-import { getMe } from '../api/authAPI'
+import API from '../api/axios'
 
 const AuthContext = createContext()
 
@@ -10,9 +10,12 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const token = localStorage.getItem('token')
     if (token) {
-      getMe()
+      API.get('/auth/me')
         .then((res) => setUser(res.data))
-        .catch(() => localStorage.removeItem('token'))
+        .catch(() => {
+          localStorage.removeItem('token')
+          setUser(null)
+        })
         .finally(() => setLoading(false))
     } else {
       setLoading(false)
@@ -29,13 +32,16 @@ export const AuthProvider = ({ children }) => {
     setUser(null)
   }
 
+  const updateUser = (userData) => {
+    setUser((prev) => ({ ...prev, ...userData }))
+  }
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, logout, updateUser }}>
       {!loading && children}
     </AuthContext.Provider>
   )
 }
 
 export const useAuth = () => useContext(AuthContext)
-
 export default AuthContext

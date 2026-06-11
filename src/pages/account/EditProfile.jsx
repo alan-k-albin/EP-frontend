@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { HiArrowLeft, HiCamera, HiPencil, HiTrash, HiPlus } from 'react-icons/hi'
+import { HiArrowLeft, HiCamera, HiPencil, HiTrash, HiPlus, HiX } from 'react-icons/hi'
 import {
   getMyProfile, updateProfile,
   addExperience, updateExperience, deleteExperience,
@@ -8,60 +8,81 @@ import {
   addSkill, deleteSkill
 } from '../../api/userAPI'
 import { uploadProfilePhoto } from '../../api/mediaAPI'
+import { useAuth } from '../../context/AuthContext'
 
 function EditProfile() {
+  const { user, updateUser } = useAuth()
   const [profile, setProfile] = useState(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [photoUploading, setPhotoUploading] = useState(false)
+  const [error, setError] = useState('')
 
-  // Basic form
   const [form, setForm] = useState({
-    fullName: '', bio: '', location: '', website: '',
-    occupation: '', industry: '', companySize: '',
-    foundedYear: '', specialities: '', currentCompany: '',
+    fullName: '',
+    bio: '',
+    location: '',
+    website: '',
+    occupation: '',
+    industry: '',
+    companySize: '',
+    foundedYear: '',
+    specialities: '',
+    currentCompany: '',
   })
 
-  // Experience form
   const [showExpForm, setShowExpForm] = useState(false)
-  const [editingExp, setEditingExp] = useState(null)
-  const [expForm, setExpForm] = useState({ title: '', company: '', startDate: '', endDate: '', current: false })
+  const [editingExpId, setEditingExpId] = useState(null)
+  const [expForm, setExpForm] = useState({
+    title: '', company: '', startDate: '', endDate: '', current: false
+  })
 
-  // Education form
   const [showEduForm, setShowEduForm] = useState(false)
-  const [editingEdu, setEditingEdu] = useState(null)
-  const [eduForm, setEduForm] = useState({ institution: '', degree: '', field: '', startYear: '', endYear: '' })
+  const [editingEduId, setEditingEduId] = useState(null)
+  const [eduForm, setEduForm] = useState({
+    institution: '', degree: '', field: '', startYear: '', endYear: ''
+  })
 
-  // Skill form
   const [skillInput, setSkillInput] = useState('')
+  const [skillError, setSkillError] = useState('')
 
   useEffect(() => {
-    getMyProfile().then((res) => {
-      setProfile(res.data)
-      setForm({
-        fullName: res.data.fullName || '',
-        bio: res.data.bio || '',
-        location: res.data.location || '',
-        website: res.data.website || '',
-        occupation: res.data.occupation || '',
-        industry: res.data.industry || '',
-        companySize: res.data.companySize || '',
-        foundedYear: res.data.foundedYear || '',
-        specialities: res.data.specialities || '',
-        currentCompany: res.data.currentCompany || '',
+    getMyProfile()
+      .then((res) => {
+        const p = res.data
+        setProfile(p)
+        setForm({
+          fullName: p.fullName || '',
+          bio: p.bio || '',
+          location: p.location || '',
+          website: p.website || '',
+          occupation: p.occupation || '',
+          industry: p.industry || '',
+          companySize: p.companySize || '',
+          foundedYear: p.foundedYear || '',
+          specialities: p.specialities || '',
+          currentCompany: p.currentCompany || '',
+        })
       })
-    }).finally(() => setLoading(false))
+      .catch((err) => console.error(err))
+      .finally(() => setLoading(false))
   }, [])
 
   const handleSave = async () => {
+    if (!form.fullName.trim()) {
+      setError('Full name is required')
+      return
+    }
     setSaving(true)
+    setError('')
     try {
       await updateProfile(form)
+      updateUser({ fullName: form.fullName })
       setSaved(true)
       setTimeout(() => setSaved(false), 2000)
     } catch (err) {
-      console.error(err)
+      setError('Failed to save. Please try again.')
     } finally {
       setSaving(false)
     }
@@ -74,6 +95,7 @@ function EditProfile() {
     try {
       const res = await uploadProfilePhoto(file)
       setProfile({ ...profile, profilePhoto: res.data.url })
+      updateUser({ profilePhoto: res.data.url })
     } catch (err) {
       console.error(err)
     } finally {
@@ -81,27 +103,40 @@ function EditProfile() {
     }
   }
 
-  const handleAddExperience = async () => {
+  const openEditExp = (exp) => {
+    setEditingExpId(exp.id)
+    setExpForm({
+      title: exp.title || '',
+      company: exp.company || '',
+      startDate: exp.start_date || '',
+      endDate: exp.end_date || '',
+      current: exp.current || false,
+    })
+    setShowExpForm(true)
+  }
+
+  const handleSaveExp = async () => {
+    if (!expForm.title || !expForm.company) return
     try {
-      if (editingExp) {
-        const res = await updateExperience(editingExp, expForm)
+      if (editingExpId) {
+        const res = await updateExperience(editingExpId, expForm)
         setProfile({
           ...profile,
-          experience: profile.experience.map((e) => e.id === editingExp ? res.data : e)
+          experience: profile.experience.map((e) => e.id === editingExpId ? res.data : e)
         })
       } else {
         const res = await addExperience(expForm)
         setProfile({ ...profile, experience: [res.data, ...profile.experience] })
       }
-      setExpForm({ title: '', company: '', startDate: '', endDate: '', current: false })
       setShowExpForm(false)
-      setEditingExp(null)
+      setEditingExpId(null)
+      setExpForm({ title: '', company: '', startDate: '', endDate: '', current: false })
     } catch (err) {
       console.error(err)
     }
   }
 
-  const handleDeleteExperience = async (expId) => {
+  const handleDeleteExp = async (expId) => {
     try {
       await deleteExperience(expId)
       setProfile({ ...profile, experience: profile.experience.filter((e) => e.id !== expId) })
@@ -110,27 +145,40 @@ function EditProfile() {
     }
   }
 
-  const handleAddEducation = async () => {
+  const openEditEdu = (edu) => {
+    setEditingEduId(edu.id)
+    setEduForm({
+      institution: edu.institution || '',
+      degree: edu.degree || '',
+      field: edu.field || '',
+      startYear: edu.start_year || '',
+      endYear: edu.end_year || '',
+    })
+    setShowEduForm(true)
+  }
+
+  const handleSaveEdu = async () => {
+    if (!eduForm.institution) return
     try {
-      if (editingEdu) {
-        const res = await updateEducation(editingEdu, eduForm)
+      if (editingEduId) {
+        const res = await updateEducation(editingEduId, eduForm)
         setProfile({
           ...profile,
-          education: profile.education.map((e) => e.id === editingEdu ? res.data : e)
+          education: profile.education.map((e) => e.id === editingEduId ? res.data : e)
         })
       } else {
         const res = await addEducation(eduForm)
         setProfile({ ...profile, education: [res.data, ...profile.education] })
       }
-      setEduForm({ institution: '', degree: '', field: '', startYear: '', endYear: '' })
       setShowEduForm(false)
-      setEditingEdu(null)
+      setEditingEduId(null)
+      setEduForm({ institution: '', degree: '', field: '', startYear: '', endYear: '' })
     } catch (err) {
       console.error(err)
     }
   }
 
-  const handleDeleteEducation = async (eduId) => {
+  const handleDeleteEdu = async (eduId) => {
     try {
       await deleteEducation(eduId)
       setProfile({ ...profile, education: profile.education.filter((e) => e.id !== eduId) })
@@ -141,12 +189,13 @@ function EditProfile() {
 
   const handleAddSkill = async () => {
     if (!skillInput.trim()) return
+    setSkillError('')
     try {
-      const res = await addSkill({ name: skillInput })
+      const res = await addSkill({ name: skillInput.trim() })
       setProfile({ ...profile, skills: [...profile.skills, res.data] })
       setSkillInput('')
     } catch (err) {
-      console.error(err)
+      setSkillError(err.response?.data?.message || 'Failed to add skill')
     }
   }
 
@@ -159,15 +208,19 @@ function EditProfile() {
     }
   }
 
-  const isStudentOrProfessional = profile?.userType === 'student' || profile?.userType === 'professional'
-  const isCompany = profile?.userType === 'company'
-  const isPublic = profile?.userType === 'public'
+  const userType = profile?.userType || user?.userType
+  const isStudentOrProfessional = userType === 'student' || userType === 'professional'
+  const isCompany = userType === 'company'
+  const isPublic = userType === 'public'
 
-  if (loading) return <p className="text-center mt-20 text-gray-400">Loading...</p>
+  if (loading) return (
+    <div className="min-h-screen bg-white flex items-center justify-center">
+      <p className="text-gray-400 text-sm">Loading...</p>
+    </div>
+  )
 
   return (
     <div className="min-h-screen bg-white pb-10">
-      {/* Top Bar */}
       <div className="fixed top-0 left-0 right-0 bg-white border-b border-gray-100 px-4 py-3 z-50 flex items-center justify-between">
         <Link to="/settings">
           <HiArrowLeft size={22} className="text-gray-500" />
@@ -178,7 +231,7 @@ function EditProfile() {
           disabled={saving}
           className="bg-[#2B4593] text-white text-sm font-semibold px-5 py-1.5 rounded-full disabled:opacity-50"
         >
-          {saved ? 'Saved!' : saving ? 'Saving...' : 'Save'}
+          {saved ? '✓ Saved' : saving ? 'Saving...' : 'Save'}
         </button>
       </div>
 
@@ -191,25 +244,32 @@ function EditProfile() {
               <img src={profile.profilePhoto} alt="profile" className="w-24 h-24 rounded-full object-cover" />
             ) : (
               <div className="w-24 h-24 rounded-full bg-[#2B4593] flex items-center justify-center text-white text-4xl font-bold">
-                {form.fullName?.charAt(0)}
+                {form.fullName?.charAt(0) || '?'}
               </div>
             )}
-            <div className="absolute bottom-0 right-0 bg-[#2B4593] rounded-full p-1.5">
+            <label htmlFor="photoUpload" className="absolute bottom-0 right-0 bg-[#2B4593] rounded-full p-1.5 cursor-pointer">
               <HiCamera size={16} className="text-white" />
-            </div>
+            </label>
           </div>
           <input type="file" accept="image/*" className="hidden" id="photoUpload" onChange={handlePhotoUpload} />
-          <label htmlFor="photoUpload" className="text-sm text-[#2B4593] font-semibold mt-3 cursor-pointer">
+          <p className="text-sm text-[#2B4593] font-semibold mt-2 cursor-pointer" onClick={() => document.getElementById('photoUpload').click()}>
             {photoUploading ? 'Uploading...' : 'Change Photo'}
-          </label>
+          </p>
         </div>
 
+        {/* Error */}
+        {error && (
+          <div className="mx-4 mt-4 bg-red-50 border border-red-200 text-red-500 text-sm px-4 py-3 rounded-xl">
+            {error}
+          </div>
+        )}
+
         {/* Basic Info */}
-        <div className="px-4 py-4 border-b border-gray-100">
+        <div className="px-4 py-5 border-b border-gray-100">
           <p className="font-bold text-gray-800 mb-4">Basic Info</p>
-          <div className="space-y-3">
+          <div className="space-y-4">
             <div>
-              <p className="text-xs text-gray-400 mb-1">Full Name</p>
+              <p className="text-xs text-gray-400 mb-1.5 font-medium">Full Name *</p>
               <input
                 type="text"
                 value={form.fullName}
@@ -218,17 +278,17 @@ function EditProfile() {
               />
             </div>
             <div>
-              <p className="text-xs text-gray-400 mb-1">Bio</p>
+              <p className="text-xs text-gray-400 mb-1.5 font-medium">Bio</p>
               <textarea
                 value={form.bio}
                 onChange={(e) => setForm({ ...form, bio: e.target.value })}
                 rows={3}
-                placeholder="Tell us about yourself"
+                placeholder="Tell us about yourself..."
                 className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#2B4593] resize-none"
               />
             </div>
             <div>
-              <p className="text-xs text-gray-400 mb-1">Location</p>
+              <p className="text-xs text-gray-400 mb-1.5 font-medium">Location</p>
               <input
                 type="text"
                 value={form.location}
@@ -238,7 +298,7 @@ function EditProfile() {
               />
             </div>
             <div>
-              <p className="text-xs text-gray-400 mb-1">Website</p>
+              <p className="text-xs text-gray-400 mb-1.5 font-medium">Website</p>
               <input
                 type="text"
                 value={form.website}
@@ -250,33 +310,33 @@ function EditProfile() {
           </div>
         </div>
 
-        {/* Public specific */}
+        {/* Public — Occupation */}
         {isPublic && (
-          <div className="px-4 py-4 border-b border-gray-100">
-            <p className="font-bold text-gray-800 mb-4">Occupation</p>
+          <div className="px-4 py-5 border-b border-gray-100">
+            <p className="font-bold text-gray-800 mb-4">What do you do?</p>
             <input
               type="text"
               value={form.occupation}
               onChange={(e) => setForm({ ...form, occupation: e.target.value })}
-              placeholder="e.g. Farmer, Driver, Tailor"
+              placeholder="e.g. Chef, Artist, Entrepreneur..."
               className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#2B4593]"
             />
           </div>
         )}
 
-        {/* Company specific */}
+        {/* Company Details */}
         {isCompany && (
-          <div className="px-4 py-4 border-b border-gray-100">
+          <div className="px-4 py-5 border-b border-gray-100">
             <p className="font-bold text-gray-800 mb-4">Company Details</p>
-            <div className="space-y-3">
+            <div className="space-y-4">
               {[
-                { label: 'Industry', key: 'industry', placeholder: 'e.g. Technology, Healthcare' },
-                { label: 'Company Size', key: 'companySize', placeholder: 'e.g. 1-10, 11-50, 51-200' },
-                { label: 'Founded Year', key: 'foundedYear', placeholder: 'e.g. 2010' },
-                { label: 'Specialities', key: 'specialities', placeholder: 'e.g. Software, AI, Design' },
+                { label: 'Industry', key: 'industry', placeholder: 'e.g. Technology, Healthcare, Education' },
+                { label: 'Company Size', key: 'companySize', placeholder: 'e.g. 1-10, 11-50, 51-200, 200+' },
+                { label: 'Founded Year', key: 'foundedYear', placeholder: 'e.g. 2015' },
+                { label: 'Specialities', key: 'specialities', placeholder: 'e.g. AI, Cloud Computing, Mobile Apps' },
               ].map((f) => (
                 <div key={f.key}>
-                  <p className="text-xs text-gray-400 mb-1">{f.label}</p>
+                  <p className="text-xs text-gray-400 mb-1.5 font-medium">{f.label}</p>
                   <input
                     type="text"
                     value={form[f.key]}
@@ -290,15 +350,15 @@ function EditProfile() {
           </div>
         )}
 
-        {/* Professional current company */}
-        {profile?.userType === 'professional' && (
-          <div className="px-4 py-4 border-b border-gray-100">
+        {/* Professional Current Company */}
+        {userType === 'professional' && (
+          <div className="px-4 py-5 border-b border-gray-100">
             <p className="font-bold text-gray-800 mb-4">Current Company</p>
             <input
               type="text"
               value={form.currentCompany}
               onChange={(e) => setForm({ ...form, currentCompany: e.target.value })}
-              placeholder="e.g. Google, Microsoft"
+              placeholder="e.g. Google, Microsoft, Startup"
               className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#2B4593]"
             />
           </div>
@@ -306,11 +366,15 @@ function EditProfile() {
 
         {/* Experience — Students & Professionals */}
         {isStudentOrProfessional && (
-          <div className="px-4 py-4 border-b border-gray-100">
+          <div className="px-4 py-5 border-b border-gray-100">
             <div className="flex items-center justify-between mb-4">
               <p className="font-bold text-gray-800">Experience</p>
               <button
-                onClick={() => { setShowExpForm(true); setEditingExp(null); setExpForm({ title: '', company: '', startDate: '', endDate: '', current: false }) }}
+                onClick={() => {
+                  setEditingExpId(null)
+                  setExpForm({ title: '', company: '', startDate: '', endDate: '', current: false })
+                  setShowExpForm(true)
+                }}
                 className="flex items-center gap-1 text-[#2B4593] text-sm font-semibold"
               >
                 <HiPlus size={16} /> Add
@@ -318,61 +382,82 @@ function EditProfile() {
             </div>
 
             {showExpForm && (
-              <div className="bg-gray-50 rounded-2xl p-4 mb-4 space-y-3">
-                {[
-                  { label: 'Title', key: 'title', placeholder: 'e.g. Software Engineer' },
-                  { label: 'Company', key: 'company', placeholder: 'e.g. Google' },
-                  { label: 'Start Date', key: 'startDate', placeholder: 'e.g. Jan 2024' },
-                  { label: 'End Date', key: 'endDate', placeholder: 'e.g. Dec 2024' },
-                ].map((f) => (
-                  <input
-                    key={f.key}
-                    placeholder={f.placeholder}
-                    value={expForm[f.key]}
-                    onChange={(e) => setExpForm({ ...expForm, [f.key]: e.target.value })}
-                    className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#2B4593] bg-white"
-                  />
-                ))}
-                <div className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={expForm.current}
-                    onChange={(e) => setExpForm({ ...expForm, current: e.target.checked })}
-                    className="accent-[#2B4593]"
-                  />
-                  <p className="text-sm text-gray-600">Currently working here</p>
-                </div>
-                <div className="flex gap-2">
-                  <button onClick={handleAddExperience} className="flex-1 bg-[#2B4593] text-white py-2 rounded-xl text-sm font-semibold">
-                    {editingExp ? 'Update' : 'Add'}
+              <div className="bg-gray-50 rounded-2xl p-4 mb-4 border border-gray-100">
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-sm font-semibold text-gray-700">
+                    {editingExpId ? 'Edit Experience' : 'Add Experience'}
+                  </p>
+                  <button onClick={() => { setShowExpForm(false); setEditingExpId(null) }}>
+                    <HiX size={18} className="text-gray-400" />
                   </button>
-                  <button onClick={() => { setShowExpForm(false); setEditingExp(null) }} className="flex-1 border border-gray-200 text-gray-500 py-2 rounded-xl text-sm">
+                </div>
+                <div className="space-y-3">
+                  {[
+                    { label: 'Job Title *', key: 'title', placeholder: 'e.g. Software Engineer' },
+                    { label: 'Company *', key: 'company', placeholder: 'e.g. Google' },
+                    { label: 'Start Date', key: 'startDate', placeholder: 'e.g. Jan 2024' },
+                    { label: 'End Date', key: 'endDate', placeholder: 'e.g. Dec 2024' },
+                  ].map((f) => (
+                    <div key={f.key}>
+                      <p className="text-xs text-gray-400 mb-1">{f.label}</p>
+                      <input
+                        placeholder={f.placeholder}
+                        value={expForm[f.key]}
+                        onChange={(e) => setExpForm({ ...expForm, [f.key]: e.target.value })}
+                        className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#2B4593] bg-white"
+                      />
+                    </div>
+                  ))}
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="currentJob"
+                      checked={expForm.current}
+                      onChange={(e) => setExpForm({ ...expForm, current: e.target.checked })}
+                      className="accent-[#2B4593]"
+                    />
+                    <label htmlFor="currentJob" className="text-sm text-gray-600">Currently working here</label>
+                  </div>
+                </div>
+                <div className="flex gap-2 mt-4">
+                  <button
+                    onClick={handleSaveExp}
+                    className="flex-1 bg-[#2B4593] text-white py-2.5 rounded-xl text-sm font-semibold"
+                  >
+                    {editingExpId ? 'Update' : 'Add Experience'}
+                  </button>
+                  <button
+                    onClick={() => { setShowExpForm(false); setEditingExpId(null) }}
+                    className="flex-1 border border-gray-200 text-gray-500 py-2.5 rounded-xl text-sm"
+                  >
                     Cancel
                   </button>
                 </div>
               </div>
             )}
 
+            {profile?.experience?.length === 0 && !showExpForm && (
+              <p className="text-sm text-gray-400 text-center py-4">No experience added yet</p>
+            )}
+
             {profile?.experience?.map((exp) => (
-              <div key={exp.id} className="flex items-start gap-3 py-3 border-b border-gray-50">
-                <div className="w-10 h-10 rounded-lg bg-[#8EB3E7] flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
-                  {exp.company?.charAt(0)}
+              <div key={exp.id} className="flex items-start gap-3 py-4 border-b border-gray-50 last:border-0">
+                <div className="w-11 h-11 rounded-xl bg-[#8EB3E7]/20 flex items-center justify-center text-[#2B4593] font-bold text-sm flex-shrink-0">
+                  {exp.company?.charAt(0)?.toUpperCase()}
                 </div>
-                <div className="flex-1">
+                <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-gray-800">{exp.title}</p>
-                  <p className="text-xs text-gray-500">{exp.company}</p>
-                  <p className="text-xs text-gray-400">{exp.start_date} - {exp.current ? 'Present' : exp.end_date}</p>
+                  <p className="text-xs text-gray-600 mt-0.5">{exp.company}</p>
+                  <p className="text-xs text-gray-400 mt-0.5">
+                    {exp.start_date} — {exp.current ? 'Present' : exp.end_date}
+                  </p>
                 </div>
-                <div className="flex gap-2">
-                  <button onClick={() => {
-                    setEditingExp(exp.id)
-                    setExpForm({ title: exp.title, company: exp.company, startDate: exp.start_date, endDate: exp.end_date, current: exp.current })
-                    setShowExpForm(true)
-                  }}>
-                    <HiPencil size={16} className="text-[#2B4593]" />
+                <div className="flex gap-2 flex-shrink-0">
+                  <button onClick={() => openEditExp(exp)} className="p-1.5 rounded-lg hover:bg-gray-100">
+                    <HiPencil size={15} className="text-[#2B4593]" />
                   </button>
-                  <button onClick={() => handleDeleteExperience(exp.id)}>
-                    <HiTrash size={16} className="text-red-400" />
+                  <button onClick={() => handleDeleteExp(exp.id)} className="p-1.5 rounded-lg hover:bg-red-50">
+                    <HiTrash size={15} className="text-red-400" />
                   </button>
                 </div>
               </div>
@@ -382,11 +467,15 @@ function EditProfile() {
 
         {/* Education — Students & Professionals */}
         {isStudentOrProfessional && (
-          <div className="px-4 py-4 border-b border-gray-100">
+          <div className="px-4 py-5 border-b border-gray-100">
             <div className="flex items-center justify-between mb-4">
               <p className="font-bold text-gray-800">Education</p>
               <button
-                onClick={() => { setShowEduForm(true); setEditingEdu(null); setEduForm({ institution: '', degree: '', field: '', startYear: '', endYear: '' }) }}
+                onClick={() => {
+                  setEditingEduId(null)
+                  setEduForm({ institution: '', degree: '', field: '', startYear: '', endYear: '' })
+                  setShowEduForm(true)
+                }}
                 className="flex items-center gap-1 text-[#2B4593] text-sm font-semibold"
               >
                 <HiPlus size={16} /> Add
@@ -394,53 +483,71 @@ function EditProfile() {
             </div>
 
             {showEduForm && (
-              <div className="bg-gray-50 rounded-2xl p-4 mb-4 space-y-3">
-                {[
-                  { label: 'Institution', key: 'institution', placeholder: 'e.g. MIT' },
-                  { label: 'Degree', key: 'degree', placeholder: 'e.g. B.Tech' },
-                  { label: 'Field', key: 'field', placeholder: 'e.g. Computer Science' },
-                  { label: 'Start Year', key: 'startYear', placeholder: 'e.g. 2020' },
-                  { label: 'End Year', key: 'endYear', placeholder: 'e.g. 2024' },
-                ].map((f) => (
-                  <input
-                    key={f.key}
-                    placeholder={f.placeholder}
-                    value={eduForm[f.key]}
-                    onChange={(e) => setEduForm({ ...eduForm, [f.key]: e.target.value })}
-                    className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#2B4593] bg-white"
-                  />
-                ))}
-                <div className="flex gap-2">
-                  <button onClick={handleAddEducation} className="flex-1 bg-[#2B4593] text-white py-2 rounded-xl text-sm font-semibold">
-                    {editingEdu ? 'Update' : 'Add'}
+              <div className="bg-gray-50 rounded-2xl p-4 mb-4 border border-gray-100">
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-sm font-semibold text-gray-700">
+                    {editingEduId ? 'Edit Education' : 'Add Education'}
+                  </p>
+                  <button onClick={() => { setShowEduForm(false); setEditingEduId(null) }}>
+                    <HiX size={18} className="text-gray-400" />
                   </button>
-                  <button onClick={() => { setShowEduForm(false); setEditingEdu(null) }} className="flex-1 border border-gray-200 text-gray-500 py-2 rounded-xl text-sm">
+                </div>
+                <div className="space-y-3">
+                  {[
+                    { label: 'Institution *', key: 'institution', placeholder: 'e.g. MIT, IIT Bombay' },
+                    { label: 'Degree', key: 'degree', placeholder: 'e.g. B.Tech, M.Sc' },
+                    { label: 'Field of Study', key: 'field', placeholder: 'e.g. Computer Science' },
+                    { label: 'Start Year', key: 'startYear', placeholder: 'e.g. 2020' },
+                    { label: 'End Year', key: 'endYear', placeholder: 'e.g. 2024 (or leave blank)' },
+                  ].map((f) => (
+                    <div key={f.key}>
+                      <p className="text-xs text-gray-400 mb-1">{f.label}</p>
+                      <input
+                        placeholder={f.placeholder}
+                        value={eduForm[f.key]}
+                        onChange={(e) => setEduForm({ ...eduForm, [f.key]: e.target.value })}
+                        className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#2B4593] bg-white"
+                      />
+                    </div>
+                  ))}
+                </div>
+                <div className="flex gap-2 mt-4">
+                  <button
+                    onClick={handleSaveEdu}
+                    className="flex-1 bg-[#2B4593] text-white py-2.5 rounded-xl text-sm font-semibold"
+                  >
+                    {editingEduId ? 'Update' : 'Add Education'}
+                  </button>
+                  <button
+                    onClick={() => { setShowEduForm(false); setEditingEduId(null) }}
+                    className="flex-1 border border-gray-200 text-gray-500 py-2.5 rounded-xl text-sm"
+                  >
                     Cancel
                   </button>
                 </div>
               </div>
             )}
 
+            {profile?.education?.length === 0 && !showEduForm && (
+              <p className="text-sm text-gray-400 text-center py-4">No education added yet</p>
+            )}
+
             {profile?.education?.map((edu) => (
-              <div key={edu.id} className="flex items-start gap-3 py-3 border-b border-gray-50">
-                <div className="w-10 h-10 rounded-lg bg-[#2B4593] flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
-                  {edu.institution?.charAt(0)}
+              <div key={edu.id} className="flex items-start gap-3 py-4 border-b border-gray-50 last:border-0">
+                <div className="w-11 h-11 rounded-xl bg-[#2B4593]/10 flex items-center justify-center text-[#2B4593] font-bold text-sm flex-shrink-0">
+                  {edu.institution?.charAt(0)?.toUpperCase()}
                 </div>
-                <div className="flex-1">
+                <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-gray-800">{edu.institution}</p>
-                  <p className="text-xs text-gray-500">{edu.degree} · {edu.field}</p>
-                  <p className="text-xs text-gray-400">{edu.start_year} - {edu.end_year}</p>
+                  {edu.degree && <p className="text-xs text-gray-600 mt-0.5">{edu.degree} {edu.field ? `· ${edu.field}` : ''}</p>}
+                  {edu.start_year && <p className="text-xs text-gray-400 mt-0.5">{edu.start_year} — {edu.end_year || 'Present'}</p>}
                 </div>
-                <div className="flex gap-2">
-                  <button onClick={() => {
-                    setEditingEdu(edu.id)
-                    setEduForm({ institution: edu.institution, degree: edu.degree, field: edu.field, startYear: edu.start_year, endYear: edu.end_year })
-                    setShowEduForm(true)
-                  }}>
-                    <HiPencil size={16} className="text-[#2B4593]" />
+                <div className="flex gap-2 flex-shrink-0">
+                  <button onClick={() => openEditEdu(edu)} className="p-1.5 rounded-lg hover:bg-gray-100">
+                    <HiPencil size={15} className="text-[#2B4593]" />
                   </button>
-                  <button onClick={() => handleDeleteEducation(edu.id)}>
-                    <HiTrash size={16} className="text-red-400" />
+                  <button onClick={() => handleDeleteEdu(edu.id)} className="p-1.5 rounded-lg hover:bg-red-50">
+                    <HiTrash size={15} className="text-red-400" />
                   </button>
                 </div>
               </div>
@@ -450,27 +557,38 @@ function EditProfile() {
 
         {/* Skills — Students & Professionals */}
         {isStudentOrProfessional && (
-          <div className="px-4 py-4 border-b border-gray-100">
+          <div className="px-4 py-5">
             <p className="font-bold text-gray-800 mb-4">Skills</p>
-            <div className="flex gap-2 mb-4">
+            <div className="flex gap-2 mb-2">
               <input
                 type="text"
-                placeholder="e.g. React, Leadership"
+                placeholder="e.g. React, Python, Leadership"
                 value={skillInput}
                 onChange={(e) => setSkillInput(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleAddSkill()}
                 className="flex-1 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#2B4593]"
               />
-              <button onClick={handleAddSkill} className="bg-[#2B4593] text-white px-4 py-2 rounded-xl text-sm font-semibold">
+              <button
+                onClick={handleAddSkill}
+                className="bg-[#2B4593] text-white px-4 py-2 rounded-xl text-sm font-semibold"
+              >
                 Add
               </button>
             </div>
+            {skillError && <p className="text-xs text-red-400 mb-2">{skillError}</p>}
+            <p className="text-xs text-gray-400 mb-3">Press Enter or tap Add</p>
+            {profile?.skills?.length === 0 && (
+              <p className="text-sm text-gray-400 text-center py-2">No skills added yet</p>
+            )}
             <div className="flex flex-wrap gap-2">
               {profile?.skills?.map((skill) => (
-                <div key={skill.id} className="flex items-center gap-1 bg-[#8EB3E7]/20 text-[#2B4593] text-xs px-3 py-1.5 rounded-full">
-                  <span>{skill.name}</span>
-                  <button onClick={() => handleDeleteSkill(skill.id)}>
-                    <HiTrash size={12} className="text-red-400 ml-1" />
+                <div
+                  key={skill.id}
+                  className="flex items-center gap-1.5 bg-[#2B4593]/5 border border-[#2B4593]/20 text-[#2B4593] text-xs px-3 py-1.5 rounded-full"
+                >
+                  <span className="font-medium">{skill.name}</span>
+                  <button onClick={() => handleDeleteSkill(skill.id)} className="ml-0.5">
+                    <HiX size={12} className="text-red-400 hover:text-red-600" />
                   </button>
                 </div>
               ))}
