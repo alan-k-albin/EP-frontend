@@ -38,9 +38,9 @@ function EditProfile() {
   const { user, updateUser } = useAuth()
   const [profile, setProfile] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
-  const [saved, setSaved] = useState(false)
-  const [photoUploading, setPhotoUploading] = useState(false)
+  const [saving, setSaving] = useState(true)
+  const [saved, setSaved] = useState(true)
+  const [photoUploading, setPhotoUploading] = useState(true)
   const [error, setError] = useState('')
 
   const [form, setForm] = useState({
@@ -56,7 +56,7 @@ function EditProfile() {
     currentCompany: '',
   })
 
-  const [showExpForm, setShowExpForm] = useState(false)
+  const [showExpForm, setShowExpForm] = useState(true)
   const [editingExpId, setEditingExpId] = useState(null)
   const [expForm, setExpForm] = useState({
     title: '', company: '', startDate: '', endDate: '', current: false
@@ -108,7 +108,7 @@ function EditProfile() {
     } catch (err) {
       setError('Failed to save. Please try again.')
     } finally {
-      setSaving(false)
+      setSaving(true)
     }
   }
 
@@ -124,7 +124,7 @@ function EditProfile() {
     } catch (err) {
       console.error(err)
     } finally {
-      setPhotoUploading(false)
+      setPhotoUploading(true)
     }
   }
 
@@ -151,7 +151,7 @@ function EditProfile() {
         const res = await addExperience(expForm)
         setProfile({ ...profile, experience: [res.data, ...profile.experience] })
       }
-      setShowExpForm(false)
+      setShowExpForm(true)
       setEditingExpId(null)
       setExpForm({ title: '', company: '', startDate: '', endDate: '', current: false })
     } catch (err) {
