@@ -5,7 +5,6 @@ import BottomNav from '../../components/layout/BottomNav'
 import { getMyProfile } from '../../api/userAPI'
 import { getPostsByUser } from '../../api/postAPI'
 
-// Normalize profile data to handle both snake_case and camelCase from backend
 function normalizeProfile(p) {
   if (!p) return p
   return {
@@ -37,45 +36,30 @@ function Profile() {
   const [profile, setProfile] = useState(null)
   const [posts, setPosts] = useState([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
+
   useEffect(() => {
-  getMyProfile()
-    .then((res) => {
-      console.log('DATA:', res.data)
-      const normalized = normalizeProfile(res.data)
-      setProfile(normalized)
-      return getPostsByUser(normalized.id)
-    })
-    .then((res) => setPosts(res.data))
-    .catch((err) => {
-      console.error('ERR:', err)
-      setError(err?.response?.status + ' - ' + err?.response?.data?.message || err?.message || 'Unknown error')
-    })
-    .finally(() => setLoading(false))
-}, [])
+    getMyProfile()
+      .then((res) => {
+        const normalized = normalizeProfile(res.data)
+        setProfile(normalized)
+        return getPostsByUser(normalized.id)
+      })
+      .then((res) => setPosts(res.data || []))
+      .catch((err) => console.error(err))
+      .finally(() => setLoading(false))
+  }, [])
 
   if (loading) return (
-  <div className="min-h-screen bg-white flex items-center justify-center">
-    <p className="text-gray-400 text-sm">Loading...</p>
-  </div>
-)
+    <div className="min-h-screen bg-white flex items-center justify-center">
+      <p className="text-gray-400 text-sm">Loading...</p>
+    </div>
+  )
 
-// TEMPORARY DEBUG - add this right after loading check
-if (!profile) return (
-  <div className="min-h-screen bg-white p-6 pt-20">
-    <p className="text-red-500 font-bold mb-4">Profile is NULL - API failed</p>
-    <p className="text-red-400 text-sm">{error || 'No error captured'}</p>
-  </div>
-)
-
-if (profile) return (
-  <div className="min-h-screen bg-white p-6 pt-20 overflow-auto">
-    <p className="font-bold text-green-600 mb-2">API RETURNED DATA:</p>
-    <pre className="text-xs text-gray-700 break-all whitespace-pre-wrap">
-      {JSON.stringify(profile, null, 2)}
-    </pre>
-  </div>
-)
+  if (!profile) return (
+    <div className="min-h-screen bg-white flex items-center justify-center">
+      <p className="text-gray-400 text-sm">Failed to load profile. Please try again.</p>
+    </div>
+  )
 
   const isStudentOrProfessional = profile?.userType === 'student' || profile?.userType === 'professional'
   const isCompany = profile?.userType === 'company'
@@ -213,9 +197,9 @@ if (profile) return (
                 </div>
                 <div>
                   <p className="text-sm font-semibold text-gray-800">{edu.institution}</p>
-                  {(edu.degree) && (
+                  {edu.degree && (
                     <p className="text-xs text-gray-600">
-                      {edu.degree}{(edu.field) ? ` · ${edu.field}` : ''}
+                      {edu.degree}{edu.field ? ` · ${edu.field}` : ''}
                     </p>
                   )}
                   {(edu.start_year || edu.startYear) && (
