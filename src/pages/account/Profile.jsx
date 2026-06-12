@@ -54,10 +54,26 @@ function Profile() {
 }, [])
 
   if (loading) return (
-    <div className="min-h-screen bg-white flex items-center justify-center">
-      <p className="text-gray-400 text-sm">Loading...</p>
-    </div>
-  )
+  <div className="min-h-screen bg-white flex items-center justify-center">
+    <p className="text-gray-400 text-sm">Loading...</p>
+  </div>
+)
+
+// TEMPORARY DEBUG - add this right after loading check
+if (!profile) return (
+  <div className="min-h-screen bg-white p-6 pt-20">
+    <p className="text-red-500 font-bold mb-4">Profile is NULL - API failed</p>
+  </div>
+)
+
+if (profile) return (
+  <div className="min-h-screen bg-white p-6 pt-20 overflow-auto">
+    <p className="font-bold text-green-600 mb-2">API RETURNED DATA:</p>
+    <pre className="text-xs text-gray-700 break-all whitespace-pre-wrap">
+      {JSON.stringify(profile, null, 2)}
+    </pre>
+  </div>
+)
 
   const isStudentOrProfessional = profile?.userType === 'student' || profile?.userType === 'professional'
   const isCompany = profile?.userType === 'company'
