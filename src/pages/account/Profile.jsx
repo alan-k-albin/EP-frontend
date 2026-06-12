@@ -39,16 +39,19 @@ function Profile() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    getMyProfile()
-      .then((res) => {
-        const normalized = normalizeProfile(res.data)
-        setProfile(normalized)
-        return getPostsByUser(normalized.id)
-      })
-      .then((res) => setPosts(res.data))
-      .catch((err) => console.error(err))
-      .finally(() => setLoading(false))
-  }, [])
+  console.log('RAW API RESPONSE TEST:')        // add this
+  getMyProfile()
+    .then((res) => {
+      console.log('RAW:', res)                  // add this
+      console.log('DATA:', res.data)            // add this
+      const normalized = normalizeProfile(res.data)
+      setProfile(normalized)
+      return getPostsByUser(normalized.id)
+    })
+    .then((res) => setPosts(res.data))
+    .catch((err) => console.error('ERR:', err))
+    .finally(() => setLoading(false))
+}, [])
 
   if (loading) return (
     <div className="min-h-screen bg-white flex items-center justify-center">
