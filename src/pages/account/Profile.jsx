@@ -37,19 +37,20 @@ function Profile() {
   const [profile, setProfile] = useState(null)
   const [posts, setPosts] = useState([])
   const [loading, setLoading] = useState(true)
-
+  const [error, setError] = useState('')
   useEffect(() => {
-  console.log('RAW API RESPONSE TEST:')        // add this
   getMyProfile()
     .then((res) => {
-      console.log('RAW:', res)                  // add this
-      console.log('DATA:', res.data)            // add this
+      console.log('DATA:', res.data)
       const normalized = normalizeProfile(res.data)
       setProfile(normalized)
       return getPostsByUser(normalized.id)
     })
     .then((res) => setPosts(res.data))
-    .catch((err) => console.error('ERR:', err))
+    .catch((err) => {
+      console.error('ERR:', err)
+      setError(err?.response?.status + ' - ' + err?.response?.data?.message || err?.message || 'Unknown error')
+    })
     .finally(() => setLoading(false))
 }, [])
 
@@ -63,6 +64,7 @@ function Profile() {
 if (!profile) return (
   <div className="min-h-screen bg-white p-6 pt-20">
     <p className="text-red-500 font-bold mb-4">Profile is NULL - API failed</p>
+    <p className="text-red-400 text-sm">{error || 'No error captured'}</p>
   </div>
 )
 
