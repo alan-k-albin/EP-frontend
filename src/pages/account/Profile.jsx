@@ -5,7 +5,6 @@ import BottomNav from '../../components/layout/BottomNav'
 import { getMyProfile } from '../../api/userAPI'
 import { getPostsByUser } from '../../api/postAPI'
 
-// Normalize profile data to handle both snake_case and camelCase from backend
 function normalizeProfile(p) {
   if (!p) return p
   return {
@@ -45,7 +44,7 @@ function Profile() {
         setProfile(normalized)
         return getPostsByUser(normalized.id)
       })
-      .then((res) => setPosts(res.data))
+      .then((res) => setPosts(res.data || []))
       .catch((err) => console.error(err))
       .finally(() => setLoading(false))
   }, [])
@@ -53,6 +52,12 @@ function Profile() {
   if (loading) return (
     <div className="min-h-screen bg-white flex items-center justify-center">
       <p className="text-gray-400 text-sm">Loading...</p>
+    </div>
+  )
+
+  if (!profile) return (
+    <div className="min-h-screen bg-white flex items-center justify-center">
+      <p className="text-gray-400 text-sm">Failed to load profile. Please try again.</p>
     </div>
   )
 
@@ -192,9 +197,9 @@ function Profile() {
                 </div>
                 <div>
                   <p className="text-sm font-semibold text-gray-800">{edu.institution}</p>
-                  {(edu.degree) && (
+                  {edu.degree && (
                     <p className="text-xs text-gray-600">
-                      {edu.degree}{(edu.field) ? ` · ${edu.field}` : ''}
+                      {edu.degree}{edu.field ? ` · ${edu.field}` : ''}
                     </p>
                   )}
                   {(edu.start_year || edu.startYear) && (
