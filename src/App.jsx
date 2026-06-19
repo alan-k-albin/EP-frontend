@@ -27,6 +27,7 @@ import Verification from './pages/account/Verification'
 import FeedA from './pages/sort/FeedA'
 import FeedB from './pages/sort/FeedB'
 import FeedC from './pages/sort/FeedC'
+import AdminPanel from './pages/admin/AdminPanel'
 import ProtectedRoute from './components/common/ProtectedRoute'
 
 function App() {
@@ -62,6 +63,7 @@ function App() {
         <Route path="/feed/a" element={<ProtectedRoute><FeedA /></ProtectedRoute>} />
         <Route path="/feed/b" element={<ProtectedRoute><FeedB /></ProtectedRoute>} />
         <Route path="/feed/c" element={<ProtectedRoute><FeedC /></ProtectedRoute>} />
+        <Route path="/admin" element={<AdminPanel />} />
       </Routes>
     </BrowserRouter>
   )
