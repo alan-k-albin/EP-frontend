@@ -127,9 +127,9 @@ function AccountSettings() {
         {/* Change Username */}
         <div className="py-5 border-b border-gray-100">
           <p className="font-semibold text-gray-800 mb-1">Change Username</p>
-          <p className="text-xs text-gray-400 mb-3">Letters, numbers and underscores only. Min 3 characters.</p>
+          <p className="text-xs text-gray-400 mb-3">Letters, numbers and underscores only. Min 10 characters.</p>
           {usernameMsg && (
-            <p className={`text-sm mb-3 ${usernameMsg.includes('✅') ? 'text-green-500' : 'text-red-500'}`}>
+            <p className={`text-sm mb-6 ${usernameMsg.includes('✅') ? 'text-green-500' : 'text-red-500'}`}>
               {usernameMsg}
             </p>
           )}
@@ -138,6 +138,7 @@ function AccountSettings() {
             placeholder="New username"
             value={username}
             onChange={(e) => { setUsername(e.target.value); setUsernameMsg('') }}
+            maxLength={30}
             className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#2B4593] mb-3"
           />
           <button
