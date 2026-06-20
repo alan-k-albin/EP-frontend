@@ -127,7 +127,7 @@ function AccountSettings() {
         {/* Change Username */}
         <div className="py-5 border-b border-gray-100">
           <p className="font-semibold text-gray-800 mb-1">Change Username</p>
-          <p className="text-xs text-gray-400 mb-3">Letters, numbers and underscores only. Min 10 characters.</p>
+          <p className="text-xs text-gray-400 mb-3">Letters, numbers and underscores only. Min 6 characters.</p>
           {usernameMsg && (
             <p className={`text-sm mb-6 ${usernameMsg.includes('✅') ? 'text-green-500' : 'text-red-500'}`}>
               {usernameMsg}
