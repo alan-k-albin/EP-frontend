@@ -14,12 +14,19 @@ const validatePassword = (password) => {
 }
 
 function AccountSettings() {
-  const { logout } = useAuth()
+  const { logout, updateUser } = useAuth()
   const navigate = useNavigate()
 
+  // Username
+  const [username, setUsername] = useState('')
+  const [usernameMsg, setUsernameMsg] = useState('')
+  const [usernameLoading, setUsernameLoading] = useState(false)
+
+  // Email
   const [email, setEmail] = useState('')
   const [emailMsg, setEmailMsg] = useState('')
 
+  // Password
   const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -27,9 +34,36 @@ function AccountSettings() {
   const [showNew, setShowNew] = useState(false)
   const [passwordMsg, setPasswordMsg] = useState('')
 
+  // Delete
   const [deleteConfirm, setDeleteConfirm] = useState(false)
 
   const passwordStrength = validatePassword(newPassword)
+
+  const handleChangeUsername = async () => {
+    if (!username.trim()) {
+      setUsernameMsg('❌ Please enter a username')
+      return
+    }
+    if (username.length < 3) {
+      setUsernameMsg('❌ Username must be at least 3 characters')
+      return
+    }
+    if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+      setUsernameMsg('❌ Username can only contain letters, numbers and underscores')
+      return
+    }
+    setUsernameLoading(true)
+    try {
+      await API.put('/users/me/username', { username: username.trim() })
+      updateUser({ username: username.trim() })
+      setUsernameMsg('✅ Username updated successfully!')
+      setUsername('')
+    } catch (err) {
+      setUsernameMsg(err.response?.data?.message || '❌ Failed to update username')
+    } finally {
+      setUsernameLoading(false)
+    }
+  }
 
   const handleChangeEmail = async () => {
     if (!validateEmail(email)) {
@@ -90,6 +124,31 @@ function AccountSettings() {
 
       <div className="pt-16 px-4 pb-10">
 
+        {/* Change Username */}
+        <div className="py-5 border-b border-gray-100">
+          <p className="font-semibold text-gray-800 mb-1">Change Username</p>
+          <p className="text-xs text-gray-400 mb-3">Letters, numbers and underscores only. Min 3 characters.</p>
+          {usernameMsg && (
+            <p className={`text-sm mb-3 ${usernameMsg.includes('✅') ? 'text-green-500' : 'text-red-500'}`}>
+              {usernameMsg}
+            </p>
+          )}
+          <input
+            type="text"
+            placeholder="New username"
+            value={username}
+            onChange={(e) => { setUsername(e.target.value); setUsernameMsg('') }}
+            className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#2B4593] mb-3"
+          />
+          <button
+            onClick={handleChangeUsername}
+            disabled={!username.trim() || usernameLoading}
+            className="bg-[#2B4593] text-white text-sm font-semibold px-4 py-2 rounded-xl disabled:opacity-50"
+          >
+            {usernameLoading ? 'Updating...' : 'Update Username'}
+          </button>
+        </div>
+
         {/* Change Email */}
         <div className="py-5 border-b border-gray-100">
           <p className="font-semibold text-gray-800 mb-3">Change Email</p>
@@ -128,7 +187,6 @@ function AccountSettings() {
             </p>
           )}
 
-          {/* Current Password */}
           <div className="relative mb-3">
             <input
               type={showCurrent ? 'text' : 'password'}
@@ -142,7 +200,6 @@ function AccountSettings() {
             </button>
           </div>
 
-          {/* New Password */}
           <div className="relative mb-3">
             <input
               type={showNew ? 'text' : 'password'}
@@ -156,7 +213,6 @@ function AccountSettings() {
             </button>
           </div>
 
-          {/* Password strength */}
           {newPassword && (
             <div className="mb-3 space-y-1">
               {[
