@@ -80,12 +80,12 @@ function Login() {
           </div>
         )}
 
-        {/* Google Sign In */}
-        <div className="mb-6">
+        {/* Full width Google Button */}
+        <div className="w-full mb-5 flex justify-center">
           <GoogleLogin
             onSuccess={handleGoogleSuccess}
             onError={() => setError('Google Sign In failed. Please try again.')}
-            width="100%"
+            width="368"
             text="continue_with"
             shape="rectangular"
             theme="outline"
@@ -94,7 +94,7 @@ function Login() {
         </div>
 
         {/* Divider */}
-        <div className="flex items-center gap-3 mb-6">
+        <div className="flex items-center gap-3 mb-5">
           <div className="flex-1 h-px bg-gray-200"></div>
           <span className="text-xs text-gray-400 font-medium">or continue with email</span>
           <div className="flex-1 h-px bg-gray-200"></div>
