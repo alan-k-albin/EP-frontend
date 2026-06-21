@@ -340,52 +340,60 @@ function PostDetail() {
       {/* Who Liked / Who Attempted Modal */}
       {peopleModal && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-30 z-50 flex items-end justify-center"
+          className="fixed inset-0 z-50 flex items-center justify-center px-4"
+          style={{ backgroundColor: 'rgba(0,0,0,0.15)' }}
           onClick={() => setPeopleModal(null)}
         >
           <div
-            className="bg-white rounded-t-2xl w-full max-w-sm p-6 max-h-96 overflow-y-auto"
+            className="bg-white rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="font-bold text-gray-800 mb-4">
-              {peopleModal === 'liked' ? '👍 People who Liked' : '🙋 People who Attempted'}
-            </h3>
-            {peopleLoading ? (
-              <p className="text-sm text-gray-400 text-center py-4">Loading...</p>
-            ) : peopleList.length === 0 ? (
-              <p className="text-sm text-gray-400 text-center py-4">Nobody yet</p>
-            ) : (
-              peopleList.map((person) => (
-                <Link
-                  to={`/user/${person.id}`}
-                  key={person.id}
-                  onClick={() => setPeopleModal(null)}
-                >
-                  <div className="flex items-center gap-3 py-3 border-b border-gray-50">
-                    {person.profile_photo ? (
-                      <img src={person.profile_photo} alt="avatar" className="w-10 h-10 rounded-full object-cover" />
-                    ) : (
-                      <div className="w-10 h-10 rounded-full bg-[#2B4593] flex items-center justify-center text-white font-bold text-sm">
-                        {person.full_name?.charAt(0)}
+            {/* Header */}
+            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+              <h3 className="font-bold text-gray-800 text-base">
+                {peopleModal === 'liked' ? '👍 Likes' : '🙋 Attempts'}
+              </h3>
+              <button
+                onClick={() => setPeopleModal(null)}
+                className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors"
+              >
+                <span className="text-gray-500 text-lg leading-none">×</span>
+              </button>
+            </div>
+
+            {/* List */}
+            <div className="max-h-80 overflow-y-auto">
+              {peopleLoading ? (
+                <p className="text-sm text-gray-400 text-center py-8">Loading...</p>
+              ) : peopleList.length === 0 ? (
+                <p className="text-sm text-gray-400 text-center py-8">Nobody yet</p>
+              ) : (
+                peopleList.map((person) => (
+                  <Link
+                    to={`/user/${person.id}`}
+                    key={person.id}
+                    onClick={() => setPeopleModal(null)}
+                  >
+                    <div className="flex items-center gap-3 px-5 py-3 hover:bg-gray-50 transition-colors border-b border-gray-50 last:border-0">
+                      {person.profile_photo ? (
+                        <img src={person.profile_photo} alt="avatar" className="w-10 h-10 rounded-full object-cover flex-shrink-0" />
+                      ) : (
+                        <div className="w-10 h-10 rounded-full bg-[#2B4593] flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                          {person.full_name?.charAt(0)}
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-gray-800">{person.full_name}</p>
+                        <p className="text-xs text-gray-400">@{person.username}</p>
                       </div>
-                    )}
-                    <div>
-                      <p className="text-sm font-semibold text-gray-800">{person.full_name}</p>
-                      <p className="text-xs text-gray-400">@{person.username}</p>
+                      {person.is_verified && (
+                        <span className="text-xs bg-[#2B4593] text-white px-1.5 py-0.5 rounded-full flex-shrink-0">✓</span>
+                      )}
                     </div>
-                    {person.is_verified && (
-                      <span className="text-xs bg-[#2B4593] text-white px-1.5 py-0.5 rounded-full ml-auto">✓</span>
-                    )}
-                  </div>
-                </Link>
-              ))
-            )}
-            <button
-              onClick={() => setPeopleModal(null)}
-              className="w-full text-center py-3 text-sm text-red-400 font-semibold mt-2"
-            >
-              Close
-            </button>
+                  </Link>
+                ))
+              )}
+            </div>
           </div>
         </div>
       )}
