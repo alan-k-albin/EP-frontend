@@ -302,31 +302,47 @@ function EditProfile() {
         {/* Photo Options Menu */}
         {showPhotoMenu && (
           <div
-            className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-end justify-center"
+            className="fixed inset-0 bg-black bg-opacity-30 z-50 flex items-end justify-center"
             onClick={() => setShowPhotoMenu(false)}
           >
             <div
-              className="bg-white rounded-t-2xl w-full max-w-sm p-4"
+              className="bg-white rounded-t-3xl w-full max-w-md p-6 shadow-2xl"
               onClick={(e) => e.stopPropagation()}
             >
-              <p className="text-sm font-bold text-gray-800 text-center mb-4">Profile Photo</p>
+              <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto mb-5"></div>
+              <p className="text-base font-bold text-gray-800 text-center mb-5">Profile Photo</p>
 
-              <label htmlFor="photoUpload" className="block w-full text-left py-3 border-b border-gray-100 text-sm text-gray-700 hover:text-[#2B4593] cursor-pointer">
-                📷 Upload New Photo
+              <label
+                htmlFor="photoUpload"
+                className="flex items-center gap-4 w-full py-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50 rounded-xl px-3 transition-colors"
+              >
+                <div className="w-10 h-10 rounded-full bg-[#2B4593]/10 flex items-center justify-center flex-shrink-0">
+                  <span className="text-xl">📷</span>
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-gray-800">Upload New Photo</p>
+                  <p className="text-xs text-gray-400">Choose from your gallery</p>
+                </div>
               </label>
 
               {profile?.profilePhoto && (
                 <button
                   onClick={handleRemovePhoto}
-                  className="w-full text-left py-3 border-b border-gray-100 text-sm text-red-500 hover:text-red-600"
+                  className="flex items-center gap-4 w-full py-4 border-b border-gray-100 hover:bg-red-50 rounded-xl px-3 transition-colors mt-1"
                 >
-                  🗑️ Remove Photo
+                  <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center flex-shrink-0">
+                    <span className="text-xl">🗑️</span>
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-red-500">Remove Photo</p>
+                    <p className="text-xs text-gray-400">Revert to default avatar</p>
+                  </div>
                 </button>
               )}
 
               <button
                 onClick={() => setShowPhotoMenu(false)}
-                className="w-full text-center py-3 text-sm text-gray-400 font-semibold mt-1"
+                className="w-full text-center py-3 text-sm text-gray-400 font-semibold mt-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors"
               >
                 Cancel
               </button>
