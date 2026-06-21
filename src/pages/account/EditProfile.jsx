@@ -8,9 +8,9 @@ import {
   addSkill, deleteSkill
 } from '../../api/userAPI'
 import { uploadProfilePhoto } from '../../api/mediaAPI'
+import API from '../../api/axios'
 import { useAuth } from '../../context/AuthContext'
 
-// Normalize profile data to handle both snake_case and camelCase from backend
 function normalizeProfile(p) {
   if (!p) return p
   return {
@@ -41,6 +41,7 @@ function EditProfile() {
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [photoUploading, setPhotoUploading] = useState(false)
+  const [showPhotoMenu, setShowPhotoMenu] = useState(false)
   const [error, setError] = useState('')
 
   const [form, setForm] = useState({
@@ -116,6 +117,7 @@ function EditProfile() {
     const file = e.target.files[0]
     if (!file) return
     setPhotoUploading(true)
+    setShowPhotoMenu(false)
     try {
       const res = await uploadProfilePhoto(file)
       const photoUrl = res.data.url || res.data.profilePhoto || res.data.profile_photo
@@ -125,6 +127,17 @@ function EditProfile() {
       console.error(err)
     } finally {
       setPhotoUploading(false)
+    }
+  }
+
+  const handleRemovePhoto = async () => {
+    setShowPhotoMenu(false)
+    try {
+      await API.delete('/users/me/profile-photo')
+      setProfile({ ...profile, profilePhoto: '' })
+      updateUser({ profilePhoto: null })
+    } catch (err) {
+      console.error(err)
     }
   }
 
@@ -270,15 +283,58 @@ function EditProfile() {
                 {form.fullName?.charAt(0) || '?'}
               </div>
             )}
-            <label htmlFor="photoUpload" className="absolute bottom-0 right-0 bg-[#2B4593] rounded-full p-1.5 cursor-pointer">
+            <button
+              onClick={() => setShowPhotoMenu(true)}
+              className="absolute bottom-0 right-0 bg-[#2B4593] rounded-full p-1.5"
+            >
               <HiCamera size={16} className="text-white" />
-            </label>
+            </button>
           </div>
-          <input type="file" accept="image/*" className="hidden" id="photoUpload" onChange={handlePhotoUpload} />
-          <p className="text-sm text-[#2B4593] font-semibold mt-2 cursor-pointer" onClick={() => document.getElementById('photoUpload').click()}>
-            {photoUploading ? 'Uploading...' : 'Change Photo'}
+
+          <p
+            className="text-sm text-[#2B4593] font-semibold mt-2 cursor-pointer"
+            onClick={() => setShowPhotoMenu(true)}
+          >
+            {photoUploading ? 'Uploading...' : 'Edit Photo'}
           </p>
         </div>
+
+        {/* Photo Options Menu */}
+        {showPhotoMenu && (
+          <div
+            className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-end justify-center"
+            onClick={() => setShowPhotoMenu(false)}
+          >
+            <div
+              className="bg-white rounded-t-2xl w-full max-w-sm p-4"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <p className="text-sm font-bold text-gray-800 text-center mb-4">Profile Photo</p>
+
+              <label htmlFor="photoUpload" className="block w-full text-left py-3 border-b border-gray-100 text-sm text-gray-700 hover:text-[#2B4593] cursor-pointer">
+                📷 Upload New Photo
+              </label>
+
+              {profile?.profilePhoto && (
+                <button
+                  onClick={handleRemovePhoto}
+                  className="w-full text-left py-3 border-b border-gray-100 text-sm text-red-500 hover:text-red-600"
+                >
+                  🗑️ Remove Photo
+                </button>
+              )}
+
+              <button
+                onClick={() => setShowPhotoMenu(false)}
+                className="w-full text-center py-3 text-sm text-gray-400 font-semibold mt-1"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+
+        <input type="file" accept="image/*" className="hidden" id="photoUpload" onChange={handlePhotoUpload} />
 
         {/* Error */}
         {error && (
@@ -387,7 +443,7 @@ function EditProfile() {
           </div>
         )}
 
-        {/* Experience — Students & Professionals */}
+        {/* Experience */}
         {isStudentOrProfessional && (
           <div className="px-4 py-5 border-b border-gray-100">
             <div className="flex items-center justify-between mb-4">
@@ -443,16 +499,10 @@ function EditProfile() {
                   </div>
                 </div>
                 <div className="flex gap-2 mt-4">
-                  <button
-                    onClick={handleSaveExp}
-                    className="flex-1 bg-[#2B4593] text-white py-2.5 rounded-xl text-sm font-semibold"
-                  >
+                  <button onClick={handleSaveExp} className="flex-1 bg-[#2B4593] text-white py-2.5 rounded-xl text-sm font-semibold">
                     {editingExpId ? 'Update' : 'Add Experience'}
                   </button>
-                  <button
-                    onClick={() => { setShowExpForm(false); setEditingExpId(null) }}
-                    className="flex-1 border border-gray-200 text-gray-500 py-2.5 rounded-xl text-sm"
-                  >
+                  <button onClick={() => { setShowExpForm(false); setEditingExpId(null) }} className="flex-1 border border-gray-200 text-gray-500 py-2.5 rounded-xl text-sm">
                     Cancel
                   </button>
                 </div>
@@ -488,7 +538,7 @@ function EditProfile() {
           </div>
         )}
 
-        {/* Education — Students & Professionals */}
+        {/* Education */}
         {isStudentOrProfessional && (
           <div className="px-4 py-5 border-b border-gray-100">
             <div className="flex items-center justify-between mb-4">
@@ -535,16 +585,10 @@ function EditProfile() {
                   ))}
                 </div>
                 <div className="flex gap-2 mt-4">
-                  <button
-                    onClick={handleSaveEdu}
-                    className="flex-1 bg-[#2B4593] text-white py-2.5 rounded-xl text-sm font-semibold"
-                  >
+                  <button onClick={handleSaveEdu} className="flex-1 bg-[#2B4593] text-white py-2.5 rounded-xl text-sm font-semibold">
                     {editingEduId ? 'Update' : 'Add Education'}
                   </button>
-                  <button
-                    onClick={() => { setShowEduForm(false); setEditingEduId(null) }}
-                    className="flex-1 border border-gray-200 text-gray-500 py-2.5 rounded-xl text-sm"
-                  >
+                  <button onClick={() => { setShowEduForm(false); setEditingEduId(null) }} className="flex-1 border border-gray-200 text-gray-500 py-2.5 rounded-xl text-sm">
                     Cancel
                   </button>
                 </div>
@@ -586,7 +630,7 @@ function EditProfile() {
           </div>
         )}
 
-        {/* Skills — Students & Professionals */}
+        {/* Skills */}
         {isStudentOrProfessional && (
           <div className="px-4 py-5">
             <p className="font-bold text-gray-800 mb-4">Skills</p>
@@ -599,10 +643,7 @@ function EditProfile() {
                 onKeyDown={(e) => e.key === 'Enter' && handleAddSkill()}
                 className="flex-1 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#2B4593]"
               />
-              <button
-                onClick={handleAddSkill}
-                className="bg-[#2B4593] text-white px-4 py-2 rounded-xl text-sm font-semibold"
-              >
+              <button onClick={handleAddSkill} className="bg-[#2B4593] text-white px-4 py-2 rounded-xl text-sm font-semibold">
                 Add
               </button>
             </div>
@@ -613,10 +654,7 @@ function EditProfile() {
             )}
             <div className="flex flex-wrap gap-2">
               {profile?.skills?.map((skill) => (
-                <div
-                  key={skill.id}
-                  className="flex items-center gap-1.5 bg-[#2B4593]/5 border border-[#2B4593]/20 text-[#2B4593] text-xs px-3 py-1.5 rounded-full"
-                >
+                <div key={skill.id} className="flex items-center gap-1.5 bg-[#2B4593]/5 border border-[#2B4593]/20 text-[#2B4593] text-xs px-3 py-1.5 rounded-full">
                   <span className="font-medium">{skill.name}</span>
                   <button onClick={() => handleDeleteSkill(skill.id)} className="ml-0.5">
                     <HiX size={12} className="text-red-400 hover:text-red-600" />
