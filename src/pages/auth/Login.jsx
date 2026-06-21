@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { loginUser } from '../../api/authAPI'
+import { GoogleLogin } from '@react-oauth/google'
+import { loginUser, googleAuth } from '../../api/authAPI'
 import { useAuth } from '../../context/AuthContext'
 
 const validateEmail = (email) => {
@@ -33,9 +34,31 @@ function Login() {
     try {
       const res = await loginUser({ email, password })
       login(res.data.token, res.data.user)
-      navigate('/')
+      if (!res.data.user.onboardingCompleted) {
+        navigate('/onboarding')
+      } else {
+        navigate('/')
+      }
     } catch (err) {
       setError(err.response?.data?.message || 'Login failed')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleGoogleSuccess = async (credentialResponse) => {
+    setError('')
+    setLoading(true)
+    try {
+      const res = await googleAuth({ token: credentialResponse.credential })
+      login(res.data.token, res.data.user)
+      if (!res.data.user.onboardingCompleted) {
+        navigate('/onboarding')
+      } else {
+        navigate('/')
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || 'Google Sign In failed')
     } finally {
       setLoading(false)
     }
@@ -56,6 +79,26 @@ function Login() {
             {error}
           </div>
         )}
+
+        {/* Google Sign In */}
+        <div className="mb-6">
+          <GoogleLogin
+            onSuccess={handleGoogleSuccess}
+            onError={() => setError('Google Sign In failed. Please try again.')}
+            width="100%"
+            text="continue_with"
+            shape="rectangular"
+            theme="outline"
+            size="large"
+          />
+        </div>
+
+        {/* Divider */}
+        <div className="flex items-center gap-3 mb-6">
+          <div className="flex-1 h-px bg-gray-200"></div>
+          <span className="text-xs text-gray-400 font-medium">or continue with email</span>
+          <div className="flex-1 h-px bg-gray-200"></div>
+        </div>
 
         <input
           type="email"

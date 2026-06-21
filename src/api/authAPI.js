@@ -1,5 +1,8 @@
 import API from './axios.js'
 
-export const registerUser = (formData) => API.post('/auth/register', formData)
-export const loginUser = (formData) => API.post('/auth/login', formData)
+export const registerUser = (data) => API.post('/auth/register', data)
+export const loginUser = (data) => API.post('/auth/login', data)
+export const googleAuth = (data) => API.post('/auth/google', data)
 export const getMe = () => API.get('/auth/me')
+export const forgotPassword = (data) => API.post('/auth/forgot-password', data)
+export const resetPassword = (data) => API.post('/auth/reset-password', data)

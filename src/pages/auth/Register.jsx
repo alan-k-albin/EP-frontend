@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { registerUser } from '../../api/authAPI'
+import { GoogleLogin } from '@react-oauth/google'
+import { registerUser, googleAuth } from '../../api/authAPI'
 import { useAuth } from '../../context/AuthContext'
 
 const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
@@ -57,6 +58,24 @@ function Register() {
     }
   }
 
+  const handleGoogleSuccess = async (credentialResponse) => {
+    setError('')
+    setLoading(true)
+    try {
+      const res = await googleAuth({ token: credentialResponse.credential })
+      login(res.data.token, res.data.user)
+      if (!res.data.user.onboardingCompleted) {
+        navigate('/onboarding')
+      } else {
+        navigate('/')
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || 'Google Sign In failed')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-white flex flex-col items-center justify-center px-6 py-10">
       <h1 className="text-5xl font-black text-[#2B4593] mb-2 tracking-tight">EP</h1>
@@ -68,6 +87,26 @@ function Register() {
             {error}
           </div>
         )}
+
+        {/* Google Sign Up */}
+        <div className="mb-6">
+          <GoogleLogin
+            onSuccess={handleGoogleSuccess}
+            onError={() => setError('Google Sign In failed. Please try again.')}
+            width="100%"
+            text="signup_with"
+            shape="rectangular"
+            theme="outline"
+            size="large"
+          />
+        </div>
+
+        {/* Divider */}
+        <div className="flex items-center gap-3 mb-6">
+          <div className="flex-1 h-px bg-gray-200"></div>
+          <span className="text-xs text-gray-400 font-medium">or register with email</span>
+          <div className="flex-1 h-px bg-gray-200"></div>
+        </div>
 
         {[
           { name: 'fullName', placeholder: 'Full Name', type: 'text' },
