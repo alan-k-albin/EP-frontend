@@ -19,7 +19,7 @@ function PostDetail() {
   const [replyingTo, setReplyingTo] = useState(null)
   const [loading, setLoading] = useState(true)
   const [showMenu, setShowMenu] = useState(false)
-  const [peopleModal, setPeopleModal] = useState(null) // 'liked' | 'attempted' | null
+  const [activeList, setActiveList] = useState(null) // 'liked' | 'attempted' | null
   const [peopleList, setPeopleList] = useState([])
   const [peopleLoading, setPeopleLoading] = useState(false)
 
@@ -61,11 +61,12 @@ function PostDetail() {
 
   const handleShowLiked = async () => {
     if (parseInt(post?.reaction_count) === 0) return
+    if (activeList === 'liked') { setActiveList(null); return }
     setPeopleLoading(true)
+    setActiveList('liked')
     try {
       const res = await getWhoLiked(id)
       setPeopleList(res.data)
-      setPeopleModal('liked')
     } catch (err) {
       console.error(err)
     } finally {
@@ -75,11 +76,12 @@ function PostDetail() {
 
   const handleShowAttempted = async () => {
     if (parseInt(post?.attempted_count) === 0) return
+    if (activeList === 'attempted') { setActiveList(null); return }
     setPeopleLoading(true)
+    setActiveList('attempted')
     try {
       const res = await getWhoAttempted(id)
       setPeopleList(res.data)
-      setPeopleModal('attempted')
     } catch (err) {
       console.error(err)
     } finally {
@@ -216,13 +218,13 @@ function PostDetail() {
               </div>
             )}
 
-            {/* Counts row */}
+            {/* Counts row — clickable, toggles inline list */}
             {(parseInt(post.reaction_count) > 0 || parseInt(post.attempted_count) > 0) && (
-              <div className="flex gap-4 mt-3 mb-1">
+              <div className="flex gap-4 mt-3 pb-2 border-b border-gray-100">
                 {parseInt(post.reaction_count) > 0 && (
                   <button
                     onClick={handleShowLiked}
-                    className="text-xs text-gray-400 hover:text-[#2B4593] hover:underline"
+                    className={`text-xs font-medium transition-colors ${activeList === 'liked' ? 'text-[#2B4593]' : 'text-gray-400 hover:text-[#2B4593]'}`}
                   >
                     👍 {post.reaction_count} {parseInt(post.reaction_count) === 1 ? 'Like' : 'Likes'}
                   </button>
@@ -230,7 +232,7 @@ function PostDetail() {
                 {parseInt(post.attempted_count) > 0 && (
                   <button
                     onClick={handleShowAttempted}
-                    className="text-xs text-gray-400 hover:text-[#2B4593] hover:underline"
+                    className={`text-xs font-medium transition-colors ${activeList === 'attempted' ? 'text-[#2B4593]' : 'text-gray-400 hover:text-[#2B4593]'}`}
                   >
                     🙋 {post.attempted_count} {parseInt(post.attempted_count) === 1 ? 'Attempt' : 'Attempts'}
                   </button>
@@ -238,8 +240,42 @@ function PostDetail() {
               </div>
             )}
 
+            {/* Inline people list — expands on page like LinkedIn */}
+            {activeList && (
+              <div className="border-b border-gray-100 pb-2">
+                {peopleLoading ? (
+                  <p className="text-xs text-gray-400 py-3 text-center">Loading...</p>
+                ) : (
+                  peopleList.map((person) => (
+                    <Link
+                      to={`/user/${person.id}`}
+                      key={person.id}
+                      onClick={() => setActiveList(null)}
+                    >
+                      <div className="flex items-center gap-3 py-2.5 hover:bg-gray-50 rounded-xl px-2 transition-colors">
+                        {person.profile_photo ? (
+                          <img src={person.profile_photo} alt="avatar" className="w-9 h-9 rounded-full object-cover flex-shrink-0" />
+                        ) : (
+                          <div className="w-9 h-9 rounded-full bg-[#2B4593] flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                            {person.full_name?.charAt(0)}
+                          </div>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold text-gray-800">{person.full_name}</p>
+                          <p className="text-xs text-gray-400">@{person.username}</p>
+                        </div>
+                        {person.is_verified && (
+                          <span className="text-xs bg-[#2B4593] text-white px-1.5 py-0.5 rounded-full flex-shrink-0">✓</span>
+                        )}
+                      </div>
+                    </Link>
+                  ))
+                )}
+              </div>
+            )}
+
             {/* Action Buttons */}
-            <div className="flex gap-1 text-sm border-t mt-2 pt-3 text-gray-500">
+            <div className="flex gap-1 text-sm mt-2 pt-2 text-gray-500">
               <button
                 onClick={handleLike}
                 className={`flex items-center gap-1 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors flex-1 justify-center ${post.liked ? 'text-[#2B4593] font-semibold' : 'text-gray-500'}`}
@@ -300,7 +336,6 @@ function PostDetail() {
                     </button>
                   </div>
 
-                  {/* Replies */}
                   {comment.replies?.map((reply) => (
                     <div key={reply.id} className="flex gap-3 mt-3 ml-4">
                       <div className="w-7 h-7 rounded-full bg-[#2B4593] flex items-center justify-center text-white font-bold text-xs flex-shrink-0">
@@ -315,7 +350,6 @@ function PostDetail() {
                     </div>
                   ))}
 
-                  {/* Reply Input */}
                   {replyingTo === comment.id && (
                     <div className="flex items-center gap-2 mt-3 ml-4">
                       <input
@@ -336,67 +370,6 @@ function PostDetail() {
           ))}
         </div>
       </div>
-
-      {/* Who Liked / Who Attempted Modal */}
-      {peopleModal && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center px-4"
-          style={{ backgroundColor: 'rgba(0,0,0,0.15)' }}
-          onClick={() => setPeopleModal(null)}
-        >
-          <div
-            className="bg-white rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Header */}
-            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-              <h3 className="font-bold text-gray-800 text-base">
-                {peopleModal === 'liked' ? '👍 Likes' : '🙋 Attempts'}
-              </h3>
-              <button
-                onClick={() => setPeopleModal(null)}
-                className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors"
-              >
-                <span className="text-gray-500 text-lg leading-none">×</span>
-              </button>
-            </div>
-
-            {/* List */}
-            <div className="max-h-80 overflow-y-auto">
-              {peopleLoading ? (
-                <p className="text-sm text-gray-400 text-center py-8">Loading...</p>
-              ) : peopleList.length === 0 ? (
-                <p className="text-sm text-gray-400 text-center py-8">Nobody yet</p>
-              ) : (
-                peopleList.map((person) => (
-                  <Link
-                    to={`/user/${person.id}`}
-                    key={person.id}
-                    onClick={() => setPeopleModal(null)}
-                  >
-                    <div className="flex items-center gap-3 px-5 py-3 hover:bg-gray-50 transition-colors border-b border-gray-50 last:border-0">
-                      {person.profile_photo ? (
-                        <img src={person.profile_photo} alt="avatar" className="w-10 h-10 rounded-full object-cover flex-shrink-0" />
-                      ) : (
-                        <div className="w-10 h-10 rounded-full bg-[#2B4593] flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
-                          {person.full_name?.charAt(0)}
-                        </div>
-                      )}
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-gray-800">{person.full_name}</p>
-                        <p className="text-xs text-gray-400">@{person.username}</p>
-                      </div>
-                      {person.is_verified && (
-                        <span className="text-xs bg-[#2B4593] text-white px-1.5 py-0.5 rounded-full flex-shrink-0">✓</span>
-                      )}
-                    </div>
-                  </Link>
-                ))
-              )}
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Comment Input */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-4 py-3 flex items-center gap-3">
