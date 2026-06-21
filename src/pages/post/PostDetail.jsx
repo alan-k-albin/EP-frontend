@@ -340,7 +340,7 @@ function PostDetail() {
       {/* Who Liked / Who Attempted Modal */}
       {peopleModal && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-end justify-center"
+          className="fixed inset-0 bg-black bg-opacity-30 z-50 flex items-end justify-center"
           onClick={() => setPeopleModal(null)}
         >
           <div
