@@ -284,7 +284,7 @@ function EditProfile() {
               </div>
             )}
             <button
-              onClick={() => setShowPhotoMenu(true)}
+              onClick={() => setShowPhotoMenu(!showPhotoMenu)}
               className="absolute bottom-0 right-0 bg-[#2B4593] rounded-full p-1.5"
             >
               <HiCamera size={16} className="text-white" />
@@ -293,62 +293,33 @@ function EditProfile() {
 
           <p
             className="text-sm text-[#2B4593] font-semibold mt-2 cursor-pointer"
-            onClick={() => setShowPhotoMenu(true)}
+            onClick={() => setShowPhotoMenu(!showPhotoMenu)}
           >
             {photoUploading ? 'Uploading...' : 'Edit Photo'}
           </p>
-        </div>
 
-        {/* Photo Options Menu */}
-        {showPhotoMenu && (
-          <div
-            className="fixed inset-0 bg-black bg-opacity-30 z-50 flex items-end justify-center"
-            onClick={() => setShowPhotoMenu(false)}
-          >
-            <div
-              className="bg-white rounded-t-3xl w-full max-w-md p-6 shadow-2xl"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto mb-5"></div>
-              <p className="text-base font-bold text-gray-800 text-center mb-5">Profile Photo</p>
-
+          {/* Inline dropdown menu */}
+          {showPhotoMenu && (
+            <div className="mt-3 bg-white border border-gray-100 rounded-2xl shadow-lg overflow-hidden w-56">
               <label
                 htmlFor="photoUpload"
-                className="flex items-center gap-4 w-full py-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50 rounded-xl px-3 transition-colors"
+                className="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer border-b border-gray-100"
               >
-                <div className="w-10 h-10 rounded-full bg-[#2B4593]/10 flex items-center justify-center flex-shrink-0">
-                  <span className="text-xl">📷</span>
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-gray-800">Upload New Photo</p>
-                  <p className="text-xs text-gray-400">Choose from your gallery</p>
-                </div>
+                <HiCamera size={16} className="text-[#2B4593]" />
+                Upload New Photo
               </label>
-
               {profile?.profilePhoto && (
                 <button
                   onClick={handleRemovePhoto}
-                  className="flex items-center gap-4 w-full py-4 border-b border-gray-100 hover:bg-red-50 rounded-xl px-3 transition-colors mt-1"
+                  className="flex items-center gap-3 px-4 py-3 text-sm text-red-500 hover:bg-red-50 w-full text-left"
                 >
-                  <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center flex-shrink-0">
-                    <span className="text-xl">🗑️</span>
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold text-red-500">Remove Photo</p>
-                    <p className="text-xs text-gray-400">Revert to default avatar</p>
-                  </div>
+                  <HiTrash size={16} className="text-red-400" />
+                  Remove Photo
                 </button>
               )}
-
-              <button
-                onClick={() => setShowPhotoMenu(false)}
-                className="w-full text-center py-3 text-sm text-gray-400 font-semibold mt-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors"
-              >
-                Cancel
-              </button>
             </div>
-          </div>
-        )}
+          )}
+        </div>
 
         <input type="file" accept="image/*" className="hidden" id="photoUpload" onChange={handlePhotoUpload} />
 
