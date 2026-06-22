@@ -33,7 +33,7 @@ function Login() {
     setError('')
     try {
       const res = await loginUser({ email, password })
-      login(res.data.token, res.data.user)
+      login(res.data.accessToken, res.data.refreshToken, res.data.user)
       if (!res.data.user.onboardingCompleted) {
         navigate('/onboarding')
       } else {
@@ -51,7 +51,7 @@ function Login() {
     setLoading(true)
     try {
       const res = await googleAuth({ token: credentialResponse.credential })
-      login(res.data.token, res.data.user)
+      login(res.data.accessToken, res.data.refreshToken, res.data.user)
       if (!res.data.user.onboardingCompleted) {
         navigate('/onboarding')
       } else {
@@ -80,7 +80,7 @@ function Login() {
           </div>
         )}
 
-        {/* Full width Google Button */}
+        {/* Google Sign In */}
         <div className="w-full mb-5 flex justify-center">
           <GoogleLogin
             onSuccess={handleGoogleSuccess}

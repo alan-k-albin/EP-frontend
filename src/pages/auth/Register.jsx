@@ -15,7 +15,7 @@ function Register() {
     setLoading(true)
     try {
       const res = await googleAuth({ token: credentialResponse.credential })
-      login(res.data.token, res.data.user)
+      login(res.data.accessToken, res.data.refreshToken, res.data.user)
       if (!res.data.user.onboardingCompleted) {
         navigate('/onboarding')
       } else {
@@ -58,7 +58,6 @@ function Register() {
                 size="large"
               />
             </div>
-
             <p className="text-xs text-gray-400 text-center mb-6 leading-relaxed px-4">
               We use Google to ensure real accounts only.
               No fake emails allowed on EP.

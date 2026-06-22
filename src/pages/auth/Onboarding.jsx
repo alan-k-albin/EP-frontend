@@ -38,7 +38,7 @@ const userTypes = [
 function Onboarding() {
   const { user, updateUser } = useAuth()
   const navigate = useNavigate()
-  const [step, setStep] = useState(1) // step 1: details, step 2: user type
+  const [step, setStep] = useState(1)
   const [username, setUsername] = useState(user?.username || '')
   const [college, setCollege] = useState('')
   const [selected, setSelected] = useState('')
@@ -59,8 +59,6 @@ function Onboarding() {
       return
     }
     setError('')
-
-    // Check username availability
     try {
       await API.put('/users/me/username', { username: username.trim() })
       updateUser({ username: username.trim() })
@@ -77,7 +75,6 @@ function Onboarding() {
     }
     setLoading(true)
     try {
-      // Save college if student
       if (selected === 'student' && college.trim()) {
         await API.put('/users/me', { college: college.trim() })
       }
@@ -110,7 +107,6 @@ function Onboarding() {
         <p className="text-red-500 text-sm text-center mb-4">{error}</p>
       )}
 
-      {/* Step 1 — Username + College */}
       {step === 1 && (
         <div className="flex-1">
           <div className="mb-5">
@@ -137,7 +133,6 @@ function Onboarding() {
             />
           </div>
 
-          {/* Show Google account info */}
           <div className="bg-gray-50 rounded-2xl p-4 mb-6">
             <p className="text-xs text-gray-400 font-medium mb-2">Signed in with Google as:</p>
             <div className="flex items-center gap-3">
@@ -165,7 +160,6 @@ function Onboarding() {
         </div>
       )}
 
-      {/* Step 2 — User Type */}
       {step === 2 && (
         <>
           <div className="space-y-3 flex-1">
