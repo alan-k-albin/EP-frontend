@@ -8,13 +8,15 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const accessToken = localStorage.getItem('accessToken')
-    if (accessToken) {
+    // Support both old 'token' and new 'accessToken'
+    const token = localStorage.getItem('accessToken') || localStorage.getItem('token')
+    if (token) {
       API.get('/auth/me')
         .then((res) => setUser(res.data))
         .catch(() => {
           localStorage.removeItem('accessToken')
           localStorage.removeItem('refreshToken')
+          localStorage.removeItem('token')
           setUser(null)
         })
         .finally(() => setLoading(false))
@@ -25,20 +27,24 @@ export const AuthProvider = ({ children }) => {
 
   const login = (accessToken, refreshToken, userData) => {
     localStorage.setItem('accessToken', accessToken)
-    localStorage.setItem('refreshToken', refreshToken)
+    if (refreshToken) localStorage.setItem('refreshToken', refreshToken)
+    // Remove old token key
+    localStorage.removeItem('token')
     setUser(userData)
   }
 
   const logout = async () => {
     const refreshToken = localStorage.getItem('refreshToken')
     try {
-      // Tell backend to delete refresh token
-      await API.post('/auth/logout', { refreshToken })
+      if (refreshToken) {
+        await API.post('/auth/logout', { refreshToken })
+      }
     } catch (err) {
       console.error('Logout error:', err)
     } finally {
       localStorage.removeItem('accessToken')
       localStorage.removeItem('refreshToken')
+      localStorage.removeItem('token')
       setUser(null)
     }
   }

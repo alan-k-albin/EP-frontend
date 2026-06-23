@@ -5,8 +5,9 @@ const API = axios.create({
 })
 
 // Attach access token to every request
+// Handle both old 'token' key and new 'accessToken' key
 API.interceptors.request.use((config) => {
-  const token = localStorage.getItem('accessToken')
+  const token = localStorage.getItem('accessToken') || localStorage.getItem('token')
   if (token) {
     config.headers.Authorization = `Bearer ${token}`
   }
@@ -24,11 +25,12 @@ API.interceptors.response.use(
       originalRequest._retry = true
 
       const refreshToken = localStorage.getItem('refreshToken')
+
+      // If no refresh token, just clear and continue
+      // Don't force redirect — let AuthContext handle it
       if (!refreshToken) {
-        // No refresh token — force logout
         localStorage.removeItem('accessToken')
-        localStorage.removeItem('refreshToken')
-        window.location.href = '/login'
+        localStorage.removeItem('token')
         return Promise.reject(error)
       }
 
@@ -41,15 +43,17 @@ API.interceptors.response.use(
 
         localStorage.setItem('accessToken', accessToken)
         localStorage.setItem('refreshToken', newRefreshToken)
+        // Remove old token key if exists
+        localStorage.removeItem('token')
 
         // Retry original request with new token
         originalRequest.headers.Authorization = `Bearer ${accessToken}`
         return API(originalRequest)
       } catch (refreshError) {
-        // Refresh failed — force logout
+        // Refresh failed — clear everything but don't force redirect
         localStorage.removeItem('accessToken')
         localStorage.removeItem('refreshToken')
-        window.location.href = '/login'
+        localStorage.removeItem('token')
         return Promise.reject(refreshError)
       }
     }
