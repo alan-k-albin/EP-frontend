@@ -82,31 +82,53 @@ function ChatList() {
             {searchQuery ? 'No chats found' : 'No chats yet. Connect with someone and start chatting!'}
           </p>
         ) : (
-          filteredChats.map((chat) => (
-            <Link
-              to={chat.is_group ? `/chat/group/${chat.id}` : `/chat/${chat.id}`}
-              key={chat.id}
-            >
-              <div className="flex items-center gap-3 px-4 py-4 border-b border-gray-50 hover:bg-gray-50">
-                <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0 ${chat.is_group ? 'bg-[#8EB3E7]' : 'bg-[#2B4593]'}`}>
-                  {chat.name?.charAt(0) || '?'}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between">
-                    <p className="font-semibold text-sm text-gray-800 truncate">{chat.name || 'Unknown'}</p>
-                    {chat.last_message_time && (
-                      <p className="text-xs text-gray-400 flex-shrink-0 ml-2">
-                        {new Date(chat.last_message_time).toLocaleDateString()}
-                      </p>
+          filteredChats.map((chat) => {
+            const hasUnread = parseInt(chat.unread_count) > 0
+            return (
+              <Link
+                to={chat.is_group ? `/chat/group/${chat.id}` : `/chat/${chat.id}`}
+                key={chat.id}
+              >
+                <div className={`flex items-center gap-3 px-4 py-4 border-b border-gray-50 hover:bg-gray-50 ${hasUnread ? 'bg-[#8EB3E7]/5' : ''}`}>
+                  <div className="relative flex-shrink-0">
+                    {chat.photo ? (
+                      <img src={chat.photo} alt="avatar" className="w-12 h-12 rounded-full object-cover" />
+                    ) : (
+                      <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-sm ${chat.is_group ? 'bg-[#8EB3E7]' : 'bg-[#2B4593]'}`}>
+                        {chat.name?.charAt(0) || '?'}
+                      </div>
+                    )}
+                    {/* Unread blue dot */}
+                    {hasUnread && (
+                      <div className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-[#2B4593] rounded-full border-2 border-white"></div>
                     )}
                   </div>
-                  <p className="text-xs text-gray-500 truncate mt-0.5">
-                    {chat.last_message || 'No messages yet'}
-                  </p>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between">
+                      <p className={`text-sm truncate ${hasUnread ? 'font-bold text-gray-900' : 'font-semibold text-gray-800'}`}>
+                        {chat.name || 'Unknown'}
+                      </p>
+                      <div className="flex items-center gap-2 flex-shrink-0 ml-2">
+                        {chat.last_message_time && (
+                          <p className={`text-xs ${hasUnread ? 'text-[#2B4593] font-semibold' : 'text-gray-400'}`}>
+                            {new Date(chat.last_message_time).toLocaleDateString()}
+                          </p>
+                        )}
+                        {hasUnread && (
+                          <span className="bg-[#2B4593] text-white text-xs rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
+                            {parseInt(chat.unread_count) > 99 ? '99+' : chat.unread_count}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <p className={`text-xs truncate mt-0.5 ${hasUnread ? 'font-semibold text-gray-700' : 'text-gray-500'}`}>
+                      {chat.last_message || 'No messages yet'}
+                    </p>
+                  </div>
                 </div>
-              </div>
-            </Link>
-          ))
+              </Link>
+            )
+          })
         )}
       </div>
 
